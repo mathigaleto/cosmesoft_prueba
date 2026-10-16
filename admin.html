@@ -49,7 +49,7 @@
           <div class="field"><label for="website">Sitio oficial</label><input id="website" type="url" required></div>
         </div></section>
         <section class="card"><h2>Empresas que confiaron</h2><div class="field"><label for="clients">Una empresa por línea: nombre | enlace HTTPS del logo</label><textarea id="clients" class="clients" spellcheck="false"></textarea><span class="hint">Ejemplo: Empresa S.A. | https://ejemplo.com/logo.png</span><label for="clientImages" style="margin-top:12px">Subir logos desde tu dispositivo</label><input id="clientImages" type="file" accept="image/*" multiple><span class="hint">Podés elegir varias imágenes. Se subirán a Supabase y se agregarán al listado con el nombre del archivo; después podés corregir cada nombre.</span><p class="status" id="uploadStatus" aria-live="polite"></p></div></section>
-        <section class="card"><h2>Fotos del equipo</h2><div class="field"><label for="team">Una persona por línea: nombre | cargo | enlace HTTPS de la foto</label><textarea id="team" class="clients" spellcheck="false" placeholder="Nombre | Cargo | https://..."></textarea><span class="hint">La web mostrará una sección con las personas que agregues. El cargo puede dejarse vacío.</span><label for="teamImages" style="margin-top:12px">Subir fotos desde tu dispositivo</label><input id="teamImages" type="file" accept="image/*" multiple><span class="hint">Elegí varias fotos. Se agregan con el nombre del archivo; editá nombre y cargo antes de guardar.</span><p class="status" id="teamUploadStatus" aria-live="polite"></p></div></section>
+        <section class="card"><h2>Fotos del equipo</h2><div class="field"><label for="team">Una persona por línea: nombre | cargo | enlace HTTPS de la foto</label><textarea id="team" class="clients" spellcheck="false" placeholder="Nombre | Cargo | https://..."></textarea><span class="hint">La web mostrará una sección con las personas que agregues. El cargo puede dejarse vacío. Atajo: pulsá espacio dos veces para insertar cada separador automáticamente; también podés escribir |.</span><label for="teamImages" style="margin-top:12px">Subir fotos desde tu dispositivo</label><input id="teamImages" type="file" accept="image/*" multiple><span class="hint">Elegí varias fotos. Se agregan con el nombre del archivo; editá nombre y cargo antes de guardar.</span><p class="status" id="teamUploadStatus" aria-live="polite"></p></div></section>
         <div class="actions"><button class="btn" id="save" type="submit">Guardar y publicar cambios</button><span class="status" id="saveStatus" aria-live="polite"></span></div>
       </form>
     </section>
@@ -74,6 +74,14 @@
       $('clients').value=(current.clients||[]).map(c=>`${c.name} | ${c.logo}`).join('\n');
       $('team').value=(current.team||[]).map(person=>`${person.name} | ${person.role||''} | ${person.photo}`).join('\n');
     }
+    $('team').addEventListener('keydown',event=>{
+      if(event.key!==' '||event.shiftKey||event.ctrlKey||event.metaKey)return;
+      const input=event.currentTarget,start=input.selectionStart,end=input.selectionEnd;
+      if(start!==end)return;
+      const before=input.value.slice(0,start),line=before.slice(before.lastIndexOf('\n')+1);
+      if(!line.endsWith(' ')||(line.match(/\|/g)||[]).length>=2)return;
+      event.preventDefault();input.setRangeText(' | ',start-1,end,'end');
+    });
     async function loadEditor(){
       const {data,error}=await supabase.from('site_content').select('content').eq('id',1).single();
       if(error) throw error;
