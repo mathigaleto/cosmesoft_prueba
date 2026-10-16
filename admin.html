@@ -49,6 +49,7 @@
           <div class="field"><label for="website">Sitio oficial</label><input id="website" type="url" required></div>
         </div></section>
         <section class="card"><h2>Empresas que confiaron</h2><div class="field"><label for="clients">Una empresa por línea: nombre | enlace HTTPS del logo</label><textarea id="clients" class="clients" spellcheck="false"></textarea><span class="hint">Ejemplo: Empresa S.A. | https://ejemplo.com/logo.png</span><label for="clientImages" style="margin-top:12px">Subir logos desde tu dispositivo</label><input id="clientImages" type="file" accept="image/*" multiple><span class="hint">Podés elegir varias imágenes. Se subirán a Supabase y se agregarán al listado con el nombre del archivo; después podés corregir cada nombre.</span><p class="status" id="uploadStatus" aria-live="polite"></p></div></section>
+        <section class="card"><h2>Fotos del equipo</h2><div class="field"><label for="team">Una persona por línea: nombre | cargo | enlace HTTPS de la foto</label><textarea id="team" class="clients" spellcheck="false" placeholder="Nombre | Cargo | https://..."></textarea><span class="hint">La web mostrará una sección con las personas que agregues. El cargo puede dejarse vacío.</span><label for="teamImages" style="margin-top:12px">Subir fotos desde tu dispositivo</label><input id="teamImages" type="file" accept="image/*" multiple><span class="hint">Elegí varias fotos. Se agregan con el nombre del archivo; editá nombre y cargo antes de guardar.</span><p class="status" id="teamUploadStatus" aria-live="polite"></p></div></section>
         <div class="actions"><button class="btn" id="save" type="submit">Guardar y publicar cambios</button><span class="status" id="saveStatus" aria-live="polite"></span></div>
       </form>
     </section>
@@ -60,7 +61,7 @@
     const ADMIN='mathigaleto@gmail.com';
     const supabase=createClient(URL,KEY);
     const $=id=>document.getElementById(id);
-    const login=$('login'),editor=$('editor'),loginStatus=$('loginStatus'),saveStatus=$('saveStatus'),uploadStatus=$('uploadStatus');
+    const login=$('login'),editor=$('editor'),loginStatus=$('loginStatus'),saveStatus=$('saveStatus'),uploadStatus=$('uploadStatus'),teamUploadStatus=$('teamUploadStatus');
     let current={};
     function showStatus(el,text,type=''){el.textContent=text;el.className=`status ${type}`.trim();}
     function authorized(session){return (session?.user?.email||'').toLowerCase()===ADMIN;}
@@ -71,6 +72,7 @@
       (current.services||[]).forEach((item,i)=>{const n=i+1;if(n>3)return;$(`service${n}Title`).value=item.title||'';$(`service${n}Description`).value=item.description||'';});
       $('aboutParagraphs').value=(current.aboutParagraphs||[]).join('\n');
       $('clients').value=(current.clients||[]).map(c=>`${c.name} | ${c.logo}`).join('\n');
+      $('team').value=(current.team||[]).map(person=>`${person.name} | ${person.role||''} | ${person.photo}`).join('\n');
     }
     async function loadEditor(){
       const {data,error}=await supabase.from('site_content').select('content').eq('id',1).single();
@@ -114,16 +116,41 @@
       }catch(error){showStatus(uploadStatus,`No se pudo subir: ${error.message}. Verificá que el bucket site-images y sus permisos estén configurados.`,'error');}
       finally{event.target.disabled=false;event.target.value='';}
     });
+    $('teamImages').addEventListener('change',async event=>{
+      const files=[...event.target.files];if(!files.length)return;
+      const {data:sessionData}=await supabase.auth.getSession();
+      if(!authorized(sessionData.session)){showStatus(teamUploadStatus,'Tu sesión de administrador venció. Volvé a ingresar.','error');event.target.value='';return;}
+      const lines=$('team').value.split('\n').map(line=>line.trim()).filter(Boolean);
+      event.target.disabled=true;showStatus(teamUploadStatus,`Subiendo ${files.length} foto${files.length===1?'':'s'}…`);
+      try{
+        for(const file of files){
+          if(!file.type.startsWith('image/'))throw new Error(`${file.name} no es una imagen.`);
+          if(file.size>5*1024*1024)throw new Error(`${file.name} supera el límite de 5 MB.`);
+          const safeName=file.name.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9._-]+/g,'-');
+          const path=`team/${crypto.randomUUID()}-${safeName}`;
+          const {error:uploadError}=await supabase.storage.from('site-images').upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type});
+          if(uploadError)throw uploadError;
+          const {data}=supabase.storage.from('site-images').getPublicUrl(path);
+          const name=file.name.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').trim();
+          lines.push(`${name} |  | ${data.publicUrl}`);
+        }
+        $('team').value=lines.join('\n');showStatus(teamUploadStatus,'Fotos subidas. Completá nombres y cargos y guardá los cambios.','success');
+      }catch(error){showStatus(teamUploadStatus,`No se pudo subir: ${error.message}. Verificá que el almacenamiento de imágenes esté configurado.`,'error');}
+      finally{event.target.disabled=false;event.target.value='';}
+    });
     $('contentForm').addEventListener('submit',async event=>{
       event.preventDefault();const {data:sessionData}=await supabase.auth.getSession();
       if(!authorized(sessionData.session)){showStatus(saveStatus,'Tu sesión de administrador venció. Volvé a ingresar.','error');return;}
       const clients=$('clients').value.split('\n').map(line=>line.trim()).filter(Boolean).map(line=>{const at=line.indexOf('|');return at<0?null:{name:line.slice(0,at).trim(),logo:line.slice(at+1).trim()}}).filter(c=>c&&c.name&&/^https:\/\//i.test(c.logo));
       if(clients.length!==$('clients').value.split('\n').filter(line=>line.trim()).length){showStatus(saveStatus,'Revisá las empresas: cada línea debe tener nombre | enlace HTTPS del logo.','error');return;}
+      const team=$('team').value.split('\n').map(line=>line.trim()).filter(Boolean).map(line=>{const parts=line.split('|').map(value=>value.trim());return parts.length>=3?{name:parts[0],role:parts[1],photo:parts.slice(2).join(' | ')}:null}).filter(person=>person&&person.name&&/^https:\/\//i.test(person.photo));
+      if(team.length!==$('team').value.split('\n').filter(line=>line.trim()).length){showStatus(saveStatus,'Revisá el equipo: cada línea debe tener nombre | cargo | enlace HTTPS de la foto.','error');return;}
       const content={...current};
       for(const key of ['heroTitle','heroText','servicesTitle','servicesIntro','aboutTitle','contactTitle','contactIntro','phone','email','mapUrl','website'])content[key]=$(key).value.trim();
       content.services=[1,2,3].map(n=>({title:$(`service${n}Title`).value.trim(),description:$(`service${n}Description`).value.trim()}));
       content.aboutParagraphs=$('aboutParagraphs').value.split('\n').map(x=>x.trim()).filter(Boolean);
       content.clients=clients;
+      content.team=team;
       $('save').disabled=true;showStatus(saveStatus,'Guardando…');
       const {error}=await supabase.from('site_content').update({content,updated_at:new Date().toISOString()}).eq('id',1);
       $('save').disabled=false;
