@@ -38,6 +38,42 @@ function renderClients(clients) {
   track.replaceChildren(makeGroup(false), makeGroup(true));
 }
 
+function renderTeam(people) {
+  const section = document.querySelector('#teamSection');
+  const grid = document.querySelector('#teamGrid');
+  if (!section || !grid || !Array.isArray(people)) return;
+  const valid = people.filter(person => person && person.name && person.photo && /^https:\/\//i.test(person.photo));
+  if (!valid.length) return;
+  grid.replaceChildren(...valid.map(person => {
+    const card = document.createElement('article');
+    card.className = 'team-card reveal';
+    const img = document.createElement('img');
+    img.src = person.photo;
+    img.alt = `Foto de ${person.name}`;
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    const info = document.createElement('div');
+    info.className = 'team-info';
+    const name = document.createElement('h3');
+    name.textContent = person.name;
+    info.appendChild(name);
+    if (person.role) {
+      const role = document.createElement('p');
+      role.textContent = person.role;
+      info.appendChild(role);
+    }
+    card.append(img, info);
+    return card;
+  }));
+  section.hidden = false;
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); }
+    }), { threshold: .12 });
+    grid.querySelectorAll('.reveal').forEach(card => observer.observe(card));
+  } else grid.querySelectorAll('.reveal').forEach(card => card.classList.add('visible'));
+}
+
 function applyContent(content) {
   setText('.hero h1', content.heroTitle);
   setText('.hero-copy', content.heroText);
@@ -67,6 +103,7 @@ function applyContent(content) {
   if (links[2] && content.mapUrl) links[2].href = content.mapUrl;
   if (links[3] && content.website) { links[3].href = content.website; links[3].lastChild.textContent = new URL(content.website).hostname.replace(/^www\./, ''); }
   renderClients(content.clients);
+  renderTeam(content.team);
 }
 
 try {
