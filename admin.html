@@ -48,7 +48,7 @@
           <div class="field"><label for="mapUrl">Enlace de Google Maps</label><input id="mapUrl" type="url" required></div>
           <div class="field"><label for="website">Sitio oficial</label><input id="website" type="url" required></div>
         </div></section>
-        <section class="card"><h2>Empresas que confiaron</h2><div class="field"><label for="clients">Una empresa por línea: nombre | enlace HTTPS del logo</label><textarea id="clients" class="clients" spellcheck="false"></textarea><span class="hint">Ejemplo: Empresa S.A. | https://ejemplo.com/logo.png</span></div></section>
+        <section class="card"><h2>Empresas que confiaron</h2><div class="field"><label for="clients">Una empresa por línea: nombre | enlace HTTPS del logo</label><textarea id="clients" class="clients" spellcheck="false"></textarea><span class="hint">Ejemplo: Empresa S.A. | https://ejemplo.com/logo.png</span><label for="clientImages" style="margin-top:12px">Subir logos desde tu dispositivo</label><input id="clientImages" type="file" accept="image/*" multiple><span class="hint">Podés elegir varias imágenes. Se subirán a Supabase y se agregarán al listado con el nombre del archivo; después podés corregir cada nombre.</span><p class="status" id="uploadStatus" aria-live="polite"></p></div></section>
         <div class="actions"><button class="btn" id="save" type="submit">Guardar y publicar cambios</button><span class="status" id="saveStatus" aria-live="polite"></span></div>
       </form>
     </section>
@@ -60,7 +60,7 @@
     const ADMIN='mathigaleto@gmail.com';
     const supabase=createClient(URL,KEY);
     const $=id=>document.getElementById(id);
-    const login=$('login'),editor=$('editor'),loginStatus=$('loginStatus'),saveStatus=$('saveStatus');
+    const login=$('login'),editor=$('editor'),loginStatus=$('loginStatus'),saveStatus=$('saveStatus'),uploadStatus=$('uploadStatus');
     let current={};
     function showStatus(el,text,type=''){el.textContent=text;el.className=`status ${type}`.trim();}
     function authorized(session){return (session?.user?.email||'').toLowerCase()===ADMIN;}
@@ -91,6 +91,29 @@
       showStatus(loginStatus,error?`No se pudo enviar: ${error.message}`:'Revisá tu correo y abrí el enlace para entrar.',''+(error?'error':'success'));
     });
     $('logout').addEventListener('click',async()=>{await supabase.auth.signOut();location.reload()});
+    $('clientImages').addEventListener('change',async event=>{
+      const files=[...event.target.files];
+      if(!files.length)return;
+      const {data:sessionData}=await supabase.auth.getSession();
+      if(!authorized(sessionData.session)){showStatus(uploadStatus,'Tu sesión de administrador venció. Volvé a ingresar.','error');event.target.value='';return;}
+      const lines=$('clients').value.split('\n').map(line=>line.trim()).filter(Boolean);
+      event.target.disabled=true;showStatus(uploadStatus,`Subiendo ${files.length} imagen${files.length===1?'':'es'}…`);
+      try{
+        for(const file of files){
+          if(!file.type.startsWith('image/'))throw new Error(`${file.name} no es una imagen.`);
+          if(file.size>5*1024*1024)throw new Error(`${file.name} supera el límite de 5 MB.`);
+          const safeName=file.name.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9._-]+/g,'-');
+          const path=`clients/${crypto.randomUUID()}-${safeName}`;
+          const {error:uploadError}=await supabase.storage.from('site-images').upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type});
+          if(uploadError)throw uploadError;
+          const {data}=supabase.storage.from('site-images').getPublicUrl(path);
+          const name=file.name.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').trim();
+          lines.push(`${name} | ${data.publicUrl}`);
+        }
+        $('clients').value=lines.join('\n');showStatus(uploadStatus,'Imágenes subidas. Revisá los nombres y luego guardá los cambios para publicarlos.','success');
+      }catch(error){showStatus(uploadStatus,`No se pudo subir: ${error.message}. Verificá que el bucket site-images y sus permisos estén configurados.`,'error');}
+      finally{event.target.disabled=false;event.target.value='';}
+    });
     $('contentForm').addEventListener('submit',async event=>{
       event.preventDefault();const {data:sessionData}=await supabase.auth.getSession();
       if(!authorized(sessionData.session)){showStatus(saveStatus,'Tu sesión de administrador venció. Volvé a ingresar.','error');return;}
