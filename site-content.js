@@ -143,6 +143,10 @@ function applyContent(content) {
 }
 
 function setTextFor(root, selector, value) { const el=root.querySelector(selector);if(el&&value)el.textContent=value; }
+// Match the rendered page order: About precedes the team gallery.
+const aboutSection = document.querySelector('#nosotros');
+const teamSection = document.querySelector('#teamSection');
+if (aboutSection && teamSection) teamSection.before(aboutSection);
 
 
 // Manual company carousel controls: pause at the first logo and allow bounded scrolling.
