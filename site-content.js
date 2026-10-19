@@ -79,7 +79,17 @@ function updateItems(selector, items, fields, className) {
     const item = items[index];
     if (!item) { card.hidden = true; return; }
     card.hidden = false;
-    if (className === 'project') card.dataset.kind = ['system', 'app', 'site'].includes(item.kind) ? item.kind : 'system';
+    if (className === 'project') {
+      card.dataset.kind = ['system', 'app', 'site'].includes(item.kind) ? item.kind : 'system';
+      const art = card.querySelector('.project-art');
+      if (art) {
+        if (!art.dataset.defaultMarkup) art.dataset.defaultMarkup = art.innerHTML;
+        if (item.image && /^https:\/\//i.test(item.image)) {
+          const image = document.createElement('img'); image.src = item.image; image.alt = item.title ? 'Imagen de ' + item.title : 'Imagen del proyecto'; image.loading = 'lazy'; image.decoding = 'async';
+          art.replaceChildren(image); art.classList.add('has-custom-image');
+        } else { art.innerHTML = art.dataset.defaultMarkup; art.classList.remove('has-custom-image'); }
+      }
+    }
     fields.forEach(([selectorInCard, key]) => { const el = card.querySelector(selectorInCard); if (el && item[key] != null) el.textContent = item[key]; });
   });
 }
@@ -139,10 +149,22 @@ function applyContent(content) {
   if(Array.isArray(content.projects))updateItems('.project-grid',content.projects,[['h3','title'],['p','description'],['.tag','tag']],'project');
   if(Array.isArray(content.steps))updateItems('.steps',content.steps,[['h3','title'],['p','description']]);
   if(Array.isArray(content.facts))updateItems('.aboutfacts',content.facts,[['b','title'],['span','description']]);
+  const setCustomImage = (selector, url) => {
+    const box = document.querySelector(selector); if (!box) return;
+    box.querySelector(':scope > .custom-art-image')?.remove();
+    if (!url || !/^https:\/\//i.test(url)) { box.classList.remove('has-custom-image'); return; }
+    const image = document.createElement('img'); image.className = 'custom-art-image'; image.src = url; image.alt = ''; image.setAttribute('aria-hidden', 'true'); image.loading = 'lazy'; image.decoding = 'async';
+    box.prepend(image); box.classList.add('has-custom-image');
+  };
+  setCustomImage('.hero-art', content.heroImage);
+  setCustomImage('.aboutvisual', content.aboutImage);
   renderClients(content.clients); renderTeam(content.team);
 }
 
 function setTextFor(root, selector, value) { const el=root.querySelector(selector);if(el&&value)el.textContent=value; }
+const editableImageStyle = document.createElement('style');
+editableImageStyle.textContent = '.custom-art-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.hero-art.has-custom-image>.orb{display:none}.aboutvisual.has-custom-image>.orb2,.aboutvisual.has-custom-image:before,.aboutvisual.has-custom-image:after{display:none}.project-art.has-custom-image{background:#eee}.project-art.has-custom-image img{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover}';
+document.head.appendChild(editableImageStyle);
 // Match the rendered page order: About precedes the team gallery.
 const aboutSection = document.querySelector('#nosotros');
 const teamSection = document.querySelector('#teamSection');
