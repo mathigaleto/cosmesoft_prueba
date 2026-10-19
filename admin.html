@@ -15,12 +15,13 @@
     <section id="login" class="card login">
       <p class="tag">ACCESO ADMINISTRATIVO</p><h1>Ingresar al panel</h1>
       <p class="intro">La página pública sigue abierta para todos. Este acceso es solo para la cuenta administradora autorizada.</p>
-      <form id="loginForm"><div class="field"><label for="loginEmail">Correo administrador</label><input id="loginEmail" type="email" autocomplete="email" value="mathigaleto@gmail.com" required></div><div class="actions"><button class="btn" type="submit">Enviar enlace seguro</button></div><p class="status" id="loginStatus" aria-live="polite"></p></form>
-      <div class="notice">El enlace de acceso se envía por correo. Si todavía no invitaste esta cuenta desde Supabase → Authentication → Users, primero completá ese paso.</div>
+      <form id="loginForm"><div class="field"><label for="loginUsername">Usuario</label><input id="loginUsername" autocomplete="username" value="cosmesoft-admin" required></div><div class="field" style="margin-top:14px"><label for="loginPassword">Contraseña</label><input id="loginPassword" type="password" autocomplete="current-password" required></div><div class="actions"><button class="btn" type="submit">Ingresar</button><button class="btn secondary" id="setupPassword" type="button">Configurar contraseña por única vez</button></div><p class="status" id="loginStatus" aria-live="polite"></p></form>
+      <div class="notice">Para iniciar normalmente usá <b>cosmesoft-admin</b> y tu contraseña; no se envía un correo en cada ingreso. Si todavía no configuraste contraseña, usá el botón de una sola vez. El enlace de correo puede estar sujeto al límite de envíos de Supabase.</div>
     </section>
 
     <section id="editor" class="hidden">
       <div class="bar"><div><p class="tag">CONTENIDO DEL SITIO</p><h1>Administrar Cosmesoft</h1><p class="intro">Editá el contenido y guardá para publicarlo en la página.</p></div><button id="logout" class="btn secondary" type="button">Cerrar sesión</button></div>
+      <form id="passwordForm" class="card"><h2>Contraseña de acceso</h2><p class="hint">Configurá una contraseña para entrar sin pedir un enlace por correo. Esta opción aparece cuando ya tenés una sesión administrativa activa.</p><div class="grid"><div class="field"><label for="newPassword">Nueva contraseña</label><input id="newPassword" type="password" autocomplete="new-password" minlength="10" required></div><div class="field"><label for="confirmPassword">Repetir contraseña</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="10" required></div></div><div class="actions"><button class="btn secondary" type="submit">Guardar contraseña</button><span class="status" id="passwordStatus" aria-live="polite"></span></div></form>
       <form id="contentForm">
         <section class="card"><h2>Portada</h2><div class="grid">
           <div class="field full"><label for="heroTitle">Título principal</label><input id="heroTitle" required maxlength="140"></div>
@@ -48,6 +49,19 @@
           <div class="field"><label for="mapUrl">Enlace de Google Maps</label><input id="mapUrl" type="url" required></div>
           <div class="field"><label for="website">Sitio oficial</label><input id="website" type="url" required></div>
         </div></section>
+        <details class="card"><summary style="font:700 21px Manrope;cursor:pointer;margin-bottom:16px">Más contenido de la página</summary><p class="hint">Acá podés cambiar los textos que no aparecen en las secciones básicas de arriba.</p><div id="extraTextFields" class="grid"></div></details>
+        <section class="card"><h2>Bloques y pasos</h2><div class="grid">
+          <div class="field full"><label for="benefits">Acompañamiento: un beneficio por línea (título | descripción)</label><textarea id="benefits" class="clients"></textarea></div>
+          <div class="field full"><label for="projects">Trabajos: un proyecto por línea (tipo: system, app o site | título | descripción | etiqueta)</label><textarea id="projects" class="clients"></textarea></div>
+          <div class="field full"><label for="steps">Cómo trabajamos: un paso por línea (título | descripción)</label><textarea id="steps" class="clients"></textarea></div>
+          <div class="field full"><label for="facts">Nosotros: un dato por línea (título | descripción)</label><textarea id="facts" class="clients"></textarea></div>
+          <span class="hint field full">Para reemplazar una foto o un logo, subí la imagen y copiá su enlace HTTPS en la fila correspondiente de Equipo o Empresas. Podés borrar filas para retirar elementos.</span>
+        </div></section>
+        <section class="card"><h2>Marca y redes</h2><div class="grid">
+          <div class="field"><label for="instagramUrl">Instagram</label><input id="instagramUrl" type="url"></div><div class="field"><label for="facebookUrl">Facebook</label><input id="facebookUrl" type="url"></div>
+          <div class="field"><label for="whatsappUrl">WhatsApp</label><input id="whatsappUrl" type="url"></div><div class="field"><label for="headerLogo">Logo de cabecera · HTTPS</label><input id="headerLogo" type="url"></div>
+          <div class="field"><label for="footerLogo">Logo del pie · HTTPS</label><input id="footerLogo" type="url"></div>
+        </div></section>
         <section class="card"><h2>Empresas que confiaron</h2><div class="field"><label for="clients">Una empresa por línea: nombre | enlace HTTPS del logo</label><textarea id="clients" class="clients" spellcheck="false"></textarea><span class="hint">Ejemplo: Empresa S.A. | https://ejemplo.com/logo.png. Atajo: pulsá espacio dos veces después del nombre para insertar |.</span><label for="clientImages" style="margin-top:12px">Subir logos desde tu dispositivo</label><input id="clientImages" type="file" accept="image/*" multiple><span class="hint">Podés elegir varias imágenes. Se subirán a Supabase y se agregarán al listado con el nombre del archivo; después podés corregir cada nombre.</span><p class="status" id="uploadStatus" aria-live="polite"></p></div></section>
         <section class="card"><h2>Fotos del equipo</h2><div class="field"><label for="team">Una persona por línea: nombre | cargo | enlace HTTPS de la foto</label><textarea id="team" class="clients" spellcheck="false" placeholder="Nombre | Cargo | https://..."></textarea><span class="hint">La web mostrará una sección con las personas que agregues. El cargo puede dejarse vacío. Atajo: pulsá espacio dos veces para insertar cada separador automáticamente; también podés escribir |.</span><label for="teamImages" style="margin-top:12px">Subir fotos desde tu dispositivo</label><input id="teamImages" type="file" accept="image/*" multiple><span class="hint">Elegí varias fotos. Se agregan con el nombre del archivo; editá nombre y cargo antes de guardar.</span><p class="status" id="teamUploadStatus" aria-live="polite"></p></div></section>
         <div class="actions"><button class="btn" id="save" type="submit">Guardar y publicar cambios</button><span class="status" id="saveStatus" aria-live="polite"></span></div>
@@ -61,18 +75,45 @@
     const ADMIN='mathigaleto@gmail.com';
     const supabase=createClient(URL,KEY);
     const $=id=>document.getElementById(id);
-    const login=$('login'),editor=$('editor'),loginStatus=$('loginStatus'),saveStatus=$('saveStatus'),uploadStatus=$('uploadStatus'),teamUploadStatus=$('teamUploadStatus');
+    const login=$('login'),editor=$('editor'),loginStatus=$('loginStatus'),saveStatus=$('saveStatus'),uploadStatus=$('uploadStatus'),teamUploadStatus=$('teamUploadStatus'),passwordStatus=$('passwordStatus');
+    const EXTRA_FIELDS=[
+      ['heroEyebrow','Texto pequeño de portada','DESARROLLO DE SOFTWARE EN PARAGUAY'],['heroPrimaryCta','Botón principal de portada','Contanos tu proyecto'],['heroSecondaryCta','Botón secundario de portada','Explorar trabajos'],['proofline','Texto de confianza de portada','Equipo cercano. Soluciones pensadas para tu realidad.'],
+      ['moreEyebrow','Etiqueta de acompañamiento','MUCHO MÁS QUE SOFTWARE'],['moreTitle','Título de acompañamiento','Un equipo que sigue a tu lado.'],['moreIntro','Descripción de acompañamiento','Una buena herramienta evoluciona con tu negocio. En Cosmesoft combinamos desarrollo personalizado con acompañamiento para que la solución siga siendo útil después del lanzamiento.'],
+      ['benefit1Title','Beneficio 1 · título','Reportes mensuales'],['benefit1Text','Beneficio 1 · descripción','Información clara para entender la actividad y orientar tus decisiones.'],['benefit2Title','Beneficio 2 · título','Soporte técnico'],['benefit2Text','Beneficio 2 · descripción','Acompañamiento cercano cuando necesitás una mano o una respuesta.'],['benefit3Title','Beneficio 3 · título','Ajustes a medida'],['benefit3Text','Beneficio 3 · descripción','Adaptamos la herramienta cuando cambian tus necesidades y prioridades.'],
+      ['reportTitle','Panel ilustrativo · encabezado','Panel de actividad'],['reportBadge','Panel ilustrativo · etiqueta','Vista de ejemplo'],['reportMetric','Panel ilustrativo · título','Decisiones más claras'],['reportNote','Panel ilustrativo · descripción','Información organizada para entender lo que pasa en tu negocio.'],['reportBottom','Panel ilustrativo · pie','Procesos conectados'],['reportPill','Panel ilustrativo · etiqueta inferior','Datos a tu alcance'],
+      ['worksEyebrow','Etiqueta de trabajos','NUESTRO TRABAJO'],['worksTitle','Título de trabajos','Hecho para resolver desafíos reales.'],['filterAll','Filtro · todos','Todos'],['filterApps','Filtro · aplicaciones','Aplicaciones'],['filterSystems','Filtro · sistemas web','Sistemas web'],['filterSites','Filtro · sitios web','Sitios web'],['caseNote','Nota debajo de trabajos','La galería es una propuesta visual de categorías de trabajo. Reemplazar estas tarjetas por proyectos publicados y aprobados por Cosmesoft antes de lanzar.'],
+      ['processEyebrow','Etiqueta de proceso','CÓMO TRABAJAMOS'],['processTitle','Título de proceso','De la idea a una solución que funciona.'],['processIntro','Descripción de proceso','Un proceso colaborativo para entender bien el desafío, construir con propósito y acompañar cada etapa.'],
+      ['heroArtLabel','Ilustración de portada · etiqueta','ACTIVIDAD DEL NEGOCIO'],['heroArtMetric','Ilustración de portada · título','Todo conectado.'],['heroWindowTitle','Ilustración de portada · panel','cosmesoft / panel'],['heroWindowHeading','Ilustración de portada · resumen','Resumen general'],['heroWindowText','Ilustración de portada · descripción','Tu operación, de un vistazo'],['heroCardLabel','Ilustración de portada · tarjeta','TU PRÓXIMO PASO'],['heroCardText','Ilustración de portada · frase','Una idea, un plan claro.'],['heroCardSubtext','Ilustración de portada · detalle','Diseño · Desarrollo · Soporte'],['heroArtFooter','Ilustración de portada · pie','Tecnología hecha para personas'],
+      ['teamEyebrow','Etiqueta de equipo','NUESTRO EQUIPO'],['teamTitle','Título de equipo','Las personas detrás de cada solución.'],['teamIntro','Descripción de equipo','Un equipo que combina conocimiento, creatividad y cercanía para acompañar cada proyecto.'],['trustIntro','Texto sobre empresas de distintos sectores','Experiencia construida junto a empresas de distintos sectores'],['trustCategory1','Categoría de clientes 1','Empresas'],['trustCategory2','Categoría de clientes 2','emprendimientos'],['trustCategory3','Categoría de clientes 3','INSTITUCIONES'],['trustCategory4','Categoría de clientes 4','negocios locales'],['clientsTitle','Título del carrusel de empresas','EMPRESAS QUE CONFIARON EN NOSOTROS'],
+      ['aboutEyebrow','Etiqueta de Nosotros','SOBRE COSMESOFT'],['aboutBadge','Texto sobre la imagen de Nosotros','Tecnología con propósito · Paraguay'],['contactEyebrow','Etiqueta de contacto','EMPECEMOS'],
+      ['navServices','Menú · servicios','Servicios'],['navWorks','Menú · trabajos','Trabajos'],['navProcess','Menú · proceso','Cómo trabajamos'],['navAbout','Menú · Nosotros','Nosotros'],['navContact','Menú · contacto','Hablemos'],['serviceEyebrow','Etiqueta de Servicios','QUÉ HACEMOS'],['serviceLink1','Enlace del servicio 1','Hablemos de tu sistema'],['serviceLink2','Enlace del servicio 2','Encontrá el camino correcto'],['serviceLink3','Enlace del servicio 3','Conversemos sobre tu proyecto'],['mapLabel','Texto del botón de ubicación','Ubicación'],['contactMapLabel','Contacto · texto de ubicación','Ver ubicación en Google Maps'],['contactWebsiteLabel','Contacto · texto del sitio','cosmesoft.com.py'],['socialInstagram','Nombre de Instagram','Instagram'],['socialFacebook','Nombre de Facebook','Facebook'],['socialWhatsapp','Nombre de WhatsApp','WhatsApp'],['footerServices','Pie · servicios','Servicios'],['footerWorks','Pie · trabajos','Trabajos'],['footerContact','Pie · contacto','Contacto'],['footerWebsite','Pie · sitio oficial','Sitio actual ↗'],
+      ['formNameLabel','Formulario · etiqueta de nombre','Tu nombre'],['formNamePlaceholder','Formulario · ejemplo de nombre','¿Cómo te llamás?'],['formCompanyLabel','Formulario · etiqueta de empresa','Empresa'],['formCompanyPlaceholder','Formulario · ejemplo de empresa','Nombre de tu empresa'],['formEmailLabel','Formulario · etiqueta de correo','Email'],['formEmailPlaceholder','Formulario · ejemplo de correo','vos@empresa.com'],['formMessageLabel','Formulario · etiqueta de mensaje','¿Qué proyecto tenés en mente?'],['formMessagePlaceholder','Formulario · ejemplo de mensaje','Contanos un poco sobre el desafío...'],['formButton','Formulario · botón','Preparar consulta'],['formHint','Formulario · ayuda','Se abrirá tu aplicación de correo con el mensaje listo para enviar.'],['footerText','Texto del pie de página','Cosmesoft. Hecho con propósito en Paraguay.']
+    ];
+    EXTRA_FIELDS.forEach(([key,label])=>{const wrap=document.createElement('div');wrap.className='field';const l=document.createElement('label');l.htmlFor=`extra_${key}`;l.textContent=label;const input=document.createElement('input');input.id=`extra_${key}`;input.dataset.extraKey=key;wrap.append(l,input);$('extraTextFields').append(wrap)});
     let current={};
     function showStatus(el,text,type=''){el.textContent=text;el.className=`status ${type}`.trim();}
     function authorized(session){return (session?.user?.email||'').toLowerCase()===ADMIN;}
     function showEditor(){login.classList.add('hidden');editor.classList.remove('hidden');}
     function fillForm(data){
       current=data||{};
-      for(const key of ['heroTitle','heroText','servicesTitle','servicesIntro','aboutTitle','contactTitle','contactIntro','phone','email','mapUrl','website']) $(key).value=current[key]||'';
+      for(const key of ['heroTitle','heroText','servicesTitle','servicesIntro','aboutTitle','contactTitle','contactIntro','phone','email','mapUrl','website','instagramUrl','facebookUrl','whatsappUrl','headerLogo','footerLogo']) $(key).value=current[key]||'';
       (current.services||[]).forEach((item,i)=>{const n=i+1;if(n>3)return;$(`service${n}Title`).value=item.title||'';$(`service${n}Description`).value=item.description||'';});
       $('aboutParagraphs').value=(current.aboutParagraphs||[]).join('\n');
+      const extra=current.extraText||{};EXTRA_FIELDS.forEach(([key,,fallback])=>{$(`extra_${key}`).value=extra[key]??fallback});
+      $('benefits').value=(current.benefits||[['Reportes mensuales','Información clara para entender la actividad y orientar tus decisiones.'],['Soporte técnico','Acompañamiento cercano cuando necesitás una mano o una respuesta.'],['Ajustes a medida','Adaptamos la herramienta cuando cambian tus necesidades y prioridades.']]).map(x=>`${x.title||x[0]} | ${x.description||x[1]}`).join('\n');
+      $('projects').value=(current.projects||[
+        {kind:'system',title:'Sistemas web',description:'Herramientas conectadas para simplificar la operación.',tag:'Plataformas digitales'},
+        {kind:'app',title:'Aplicaciones móviles',description:'Experiencias móviles pensadas para personas y equipos.',tag:'iOS · Android'},
+        {kind:'site',title:'Sitios web',description:'Presencia digital clara, cuidada y alineada a tu marca.',tag:'Diseño web'},
+        {kind:'system',title:'Gestión y reportes',description:'Información organizada para acompañar mejores decisiones.',tag:'Datos y procesos'},
+        {kind:'app',title:'Soluciones a medida',description:'Funcionalidades que responden a una necesidad específica.',tag:'Desarrollo personalizado'},
+        {kind:'site',title:'Experiencias digitales',description:'Diseño y tecnología trabajando juntos para tu negocio.',tag:'Web y tecnología'}
+      ]).map(x=>`${x.kind||'system'} | ${x.title||''} | ${x.description||''} | ${x.tag||''}`).join('\n');
+      $('steps').value=(current.steps||[['Escuchamos','Conocemos tu negocio, tus procesos y el desafío que querés resolver.'],['Diseñamos el camino','Definimos una propuesta y el alcance técnico que mejor encaja.'],['Construimos juntos','Desarrollamos y validamos la solución con vos en cada etapa.'],['Seguimos cerca','Te acompañamos con soporte y ajustes para que la solución evolucione.']]).map(x=>`${x.title||x[0]} | ${x.description||x[1]}`).join('\n');
+      $('facts').value=(current.facts||[['A medida','Cada desafío es único'],['Cercanos','Acompañamiento real'],['Integrales','De la idea al soporte']]).map(x=>`${x.title||x[0]} | ${x.description||x[1]}`).join('\n');
       $('clients').value=(current.clients||[]).map(c=>`${c.name} | ${c.logo}`).join('\n');
-      $('team').value=(current.team||[]).map(person=>`${person.name} | ${person.role||''} | ${person.photo}`).join('\n');
+      const defaultTeam=[1,2,3,4,5,6,7].map(n=>({name:`Integrante ${n}`,role:'',photo:`https://www.cosmesoft.com.py/wp-content/uploads/2018/09/team${n}-450x545_c.jpg`}));
+      $('team').value=(current.team??defaultTeam).map(person=>`${person.name} | ${person.role||''} | ${person.photo}`).join('\n');
     }
     function enableSpaceSeparator(id,maxSeparators){
       $(id).addEventListener('keydown',event=>{
@@ -98,13 +139,16 @@
       try{await loadEditor()}catch(error){showStatus(loginStatus,`No se pudo cargar el contenido: ${error.message}`,'error')}
     }
     $('loginForm').addEventListener('submit',async event=>{
-      event.preventDefault();const email=$('loginEmail').value.trim().toLowerCase();
-      if(email!==ADMIN){showStatus(loginStatus,'Este correo no está autorizado.','error');return;}
-      showStatus(loginStatus,'Enviando enlace seguro…');
-      const {error}=await supabase.auth.signInWithOtp({email,options:{emailRedirectTo:location.href,shouldCreateUser:false}});
-      showStatus(loginStatus,error?`No se pudo enviar: ${error.message}`:'Revisá tu correo y abrí el enlace para entrar.',''+(error?'error':'success'));
+      event.preventDefault();
+      const username=$('loginUsername').value.trim().toLowerCase(),password=$('loginPassword').value;
+      if(username!=='cosmesoft-admin'){showStatus(loginStatus,'El usuario o la contraseña no son correctos.','error');return;}
+      showStatus(loginStatus,'Verificando acceso…');
+      const {error}=await supabase.auth.signInWithPassword({email:ADMIN,password});
+      showStatus(loginStatus,error?'No se pudo ingresar. Revisá el usuario y la contraseña.':'Acceso correcto. Cargando el panel…',error?'error':'success');
     });
+    $('setupPassword').addEventListener('click',async()=>{showStatus(loginStatus,'Enviando el enlace de configuración…');const {error}=await supabase.auth.signInWithOtp({email:ADMIN,options:{emailRedirectTo:location.href,shouldCreateUser:false}});showStatus(loginStatus,error?`No se pudo enviar: ${error.message}`:'Abrí el enlace recibido y luego creá tu contraseña en el panel.',''+(error?'error':'success'));});
     $('logout').addEventListener('click',async()=>{await supabase.auth.signOut();location.reload()});
+    $('passwordForm').addEventListener('submit',async event=>{event.preventDefault();const {data}=await supabase.auth.getSession();if(!authorized(data.session)){showStatus(passwordStatus,'Tu sesión administrativa venció.','error');return;}const password=$('newPassword').value;if(password!==$('confirmPassword').value){showStatus(passwordStatus,'Las contraseñas no coinciden.','error');return;}const {error}=await supabase.auth.updateUser({password});if(error){showStatus(passwordStatus,`No se pudo actualizar: ${error.message}`,'error');return;}$('passwordForm').reset();showStatus(passwordStatus,'Contraseña actualizada. Ya podés usarla con cosmesoft-admin.','success');});
     $('clientImages').addEventListener('change',async event=>{
       const files=[...event.target.files];
       if(!files.length)return;
@@ -158,9 +202,15 @@
       const team=$('team').value.split('\n').map(line=>line.trim()).filter(Boolean).map(line=>{const parts=line.split('|').map(value=>value.trim());return parts.length>=3?{name:parts[0],role:parts[1],photo:parts.slice(2).join(' | ')}:null}).filter(person=>person&&person.name&&/^https:\/\//i.test(person.photo));
       if(team.length!==$('team').value.split('\n').filter(line=>line.trim()).length){showStatus(saveStatus,'Revisá el equipo: cada línea debe tener nombre | cargo | enlace HTTPS de la foto.','error');return;}
       const content={...current};
-      for(const key of ['heroTitle','heroText','servicesTitle','servicesIntro','aboutTitle','contactTitle','contactIntro','phone','email','mapUrl','website'])content[key]=$(key).value.trim();
+      for(const key of ['heroTitle','heroText','servicesTitle','servicesIntro','aboutTitle','contactTitle','contactIntro','phone','email','mapUrl','website','instagramUrl','facebookUrl','whatsappUrl','headerLogo','footerLogo'])content[key]=$(key).value.trim();
+      content.extraText=Object.fromEntries(EXTRA_FIELDS.map(([key])=>[key,$(`extra_${key}`).value.trim()]));
       content.services=[1,2,3].map(n=>({title:$(`service${n}Title`).value.trim(),description:$(`service${n}Description`).value.trim()}));
       content.aboutParagraphs=$('aboutParagraphs').value.split('\n').map(x=>x.trim()).filter(Boolean);
+      const parseRows=(id,columns)=>$(id).value.split('\n').map(line=>line.trim()).filter(Boolean).map(line=>line.split('|').map(x=>x.trim())).filter(parts=>parts.length>=columns);
+      content.benefits=parseRows('benefits',2).map(([title,description])=>({title,description}));
+      content.projects=parseRows('projects',4).map(([kind,title,description,tag])=>({kind,title,description,tag}));
+      content.steps=parseRows('steps',2).map(([title,description])=>({title,description}));
+      content.facts=parseRows('facts',2).map(([title,description])=>({title,description}));
       content.clients=clients;
       content.team=team;
       $('save').disabled=true;showStatus(saveStatus,'Guardando…');
