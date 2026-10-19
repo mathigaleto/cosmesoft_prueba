@@ -119,10 +119,10 @@ function applyContent(content) {
   }
   setText('.contact h2', content.contactTitle); setText('.contactgrid > div > p', content.contactIntro);
   const links = document.querySelectorAll('.contactdetails a');
-  if (links[0] && content.phone) { links[0].href = `tel:${content.phone.replace(/[^+\\d]/g, '')}`; links[0].lastChild.textContent = content.phone; }
+  if (links[0] && content.phone) { links[0].href = `tel:${content.phone.replace(/[^+\d]/g, '')}`; links[0].lastChild.textContent = content.phone; }
   if (links[1] && content.email) { links[1].href = `mailto:${content.email}`; links[1].lastChild.textContent = content.email; }
   if (links[2] && content.mapUrl) links[2].href = content.mapUrl;
-  if (links[3] && content.website) { links[3].href = content.website; try{links[3].lastChild.textContent = new URL(content.website).hostname.replace(/^www\\./, '');}catch{}}
+  if (links[3] && content.website) { links[3].href = content.website; try{links[3].lastChild.textContent = new URL(content.website).hostname.replace(/^www\./, '');}catch{}}
   if (Array.isArray(content.extraText)) content.extraText = Object.fromEntries(content.extraText);
   if (content.extraText) Object.entries(content.extraText).forEach(([key,value])=>{
     const target=EXTRA_TARGETS[key];if(!target||typeof value!=='string')return;
@@ -144,6 +144,62 @@ function applyContent(content) {
 
 function setTextFor(root, selector, value) { const el=root.querySelector(selector);if(el&&value)el.textContent=value; }
 
+
+// Manual company carousel controls: pause at the first logo and allow bounded scrolling.
+const manualMarqueeStyle = document.createElement('style');
+manualMarqueeStyle.textContent = `
+  .client-marquee.is-manual { overflow-x:auto!important; overflow-y:hidden!important; mask-image:none!important; -webkit-mask-image:none!important; scrollbar-width:thin; -webkit-overflow-scrolling:touch; overscroll-behavior-x:contain; touch-action:pan-x; cursor:grab; }
+  .client-marquee.is-manual.is-dragging { cursor:grabbing; }
+  .client-marquee.is-manual .client-track { animation:none!important; transform:none!important; will-change:auto!important; }
+  .client-marquee.is-manual .client-group[aria-hidden="true"] { display:none!important; }
+  .client-marquee.is-manual .client-group { padding-right:0!important; }
+`;
+document.head.appendChild(manualMarqueeStyle);
+const manualMarquee = document.querySelector('#clientMarquee');
+const manualMarqueeTrack = document.querySelector('#clientTrack');
+const manualMarqueeButton = document.querySelector('#marqueeToggle');
+if (manualMarquee && manualMarqueeTrack && manualMarqueeButton) {
+  const toggleManualMarquee = paused => {
+    manualMarqueeTrack.classList.toggle('is-paused', paused);
+    manualMarquee.classList.toggle('is-manual', paused);
+    if (paused) {
+      manualMarquee.scrollLeft = 0;
+      manualMarqueeTrack.getAnimations().forEach(animation => animation.cancel());
+      manualMarqueeTrack.style.animation = 'none';
+      manualMarqueeTrack.style.transform = 'none';
+    } else {
+      manualMarquee.scrollLeft = 0;
+      manualMarqueeTrack.style.animation = '';
+      manualMarqueeTrack.style.transform = '';
+      void manualMarqueeTrack.offsetWidth;
+      manualMarqueeTrack.getAnimations().forEach(animation => animation.play());
+    }
+    manualMarqueeButton.setAttribute('aria-pressed', String(paused));
+    manualMarqueeButton.setAttribute('aria-label', paused ? 'Reanudar movimiento de empresas' : 'Pausar movimiento de empresas');
+    manualMarqueeButton.textContent = paused ? 'Reanudar' : 'Pausar';
+  };
+  manualMarqueeButton.addEventListener('click', event => {
+    event.stopImmediatePropagation();
+    toggleManualMarquee(!manualMarquee.classList.contains('is-manual'));
+  }, true);
+  manualMarquee.addEventListener('touchstart', event => {
+    if (!manualMarquee.classList.contains('is-manual')) toggleManualMarquee(true);
+    event.stopImmediatePropagation();
+  }, { capture:true, passive:true });
+  let dragOriginX = 0, dragOriginScroll = 0, isDragging = false;
+  manualMarquee.addEventListener('mousedown', event => {
+    if (!manualMarquee.classList.contains('is-manual') || event.button !== 0) return;
+    isDragging = true; dragOriginX = event.clientX; dragOriginScroll = manualMarquee.scrollLeft;
+    manualMarquee.classList.add('is-dragging'); event.preventDefault();
+  });
+  window.addEventListener('mousemove', event => {
+    if (isDragging) manualMarquee.scrollLeft = dragOriginScroll - (event.clientX - dragOriginX);
+  });
+  window.addEventListener('mouseup', () => {
+    isDragging = false; manualMarquee.classList.remove('is-dragging');
+  });
+}
+
 try {
   const { data, error } = await db.from('site_content').select('content').eq('id', 1).maybeSingle();
   if (error) throw error;
@@ -151,3 +207,4 @@ try {
 } catch (error) {
   console.info('Se muestra el contenido local mientras se conecta el administrador.', error.message);
 }
+
