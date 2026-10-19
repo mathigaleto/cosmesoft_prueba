@@ -8,7 +8,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
 
 function setText(selector, value) {
   const el = document.querySelector(selector);
-  if (el && typeof value === 'string' && value.trim()) el.textContent = value;
+  if (el && typeof value === 'string') el.textContent = value;
 }
 
 function setLinkLabel(selector, value) {
@@ -72,7 +72,7 @@ function updateItems(selector, items, fields, className) {
   if (!container || !Array.isArray(items) || !items.length) return;
   let cards = [...container.children];
   while (cards.length < items.length && cards.length) {
-    const copy = cards[0].cloneNode(true); copy.classList.remove('visible'); container.appendChild(copy); cards.push(copy);
+    const copy = cards[0].cloneNode(true); copy.classList.add('visible'); container.appendChild(copy); cards.push(copy);
   }
   cards.forEach((card, index) => {
     const item = items[index];
@@ -124,7 +124,7 @@ function applyContent(content) {
   if (links[3] && content.website) { links[3].href = content.website; try{links[3].lastChild.textContent = new URL(content.website).hostname.replace(/^www\./, '');}catch{}}
   if (Array.isArray(content.extraText)) content.extraText = Object.fromEntries(content.extraText);
   if (content.extraText) Object.entries(content.extraText).forEach(([key,value])=>{
-    const target=EXTRA_TARGETS[key];if(!target||typeof value!=='string'||!value.trim())return;
+    const target=EXTRA_TARGETS[key];if(!target||typeof value!=='string')return;
     if(target[1])setLinkLabel(target[0],value);else setText(target[0],value);
   });
   const placeholders={formNamePlaceholder:'#nombre',formCompanyPlaceholder:'#empresa',formEmailPlaceholder:'#email',formMessagePlaceholder:'#mensaje'};
