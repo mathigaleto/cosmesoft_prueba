@@ -1,2 +1,2 @@
-# cosmesoft_prueba
+# cosmesoft
 Sitio web de Cosmesoft Paraguay
