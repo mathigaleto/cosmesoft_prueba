@@ -95,7 +95,7 @@ function updateItems(selector, items, fields, className) {
 }
 
 const EXTRA_TARGETS = {
-  heroEyebrow: ['.hero .eyebrow'], heroPrimaryCta: ['.hero .actions a:first-child', true], heroSecondaryCta: ['.hero .actions a:last-child', true], proofline: ['.proofline > span'],
+  heroEyebrow: ['.hero .eyebrow'], heroPrimaryCta: ['.hero .actions a:first-child', true], heroSecondaryCta: ['.hero .actions a:last-child', true], proofBadge1: ['.avatars i:nth-child(1)'], proofBadge2: ['.avatars i:nth-child(2)'], proofBadge3: ['.avatars i:nth-child(3)'], proofline: ['.proofline > span'],
   moreEyebrow: ['.morecopy .eyebrow'], moreTitle: ['.morecopy h2'], moreIntro: ['.morecopy > p'],
   benefit1Title: ['.benefits .benefit:nth-child(1) b'], benefit1Text: ['.benefits .benefit:nth-child(1) span'], benefit2Title: ['.benefits .benefit:nth-child(2) b'], benefit2Text: ['.benefits .benefit:nth-child(2) span'], benefit3Title: ['.benefits .benefit:nth-child(3) b'], benefit3Text: ['.benefits .benefit:nth-child(3) span'],
   reportTitle: ['.report-top strong'], reportBadge: ['.report-top span'], reportMetric: ['.report-num'], reportNote: ['.report-note'], reportBottom: ['.report-bottom span:first-child'], reportPill: ['.report-bottom .pill'],
@@ -163,7 +163,7 @@ function applyContent(content) {
 
 function setTextFor(root, selector, value) { const el=root.querySelector(selector);if(el&&value)el.textContent=value; }
 const editableImageStyle = document.createElement('style');
-editableImageStyle.textContent = '.custom-art-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.hero-art.has-custom-image>.orb{display:none}.aboutvisual.has-custom-image>.orb2,.aboutvisual.has-custom-image:before,.aboutvisual.has-custom-image:after{display:none}.project-art.has-custom-image{background:#eee}.project-art.has-custom-image img{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover}';
+editableImageStyle.textContent = '.proofline{max-width:560px;gap:14px}.avatars{flex:none;gap:4px}.avatars i{width:34px;height:34px;margin-left:0;font-size:10px;box-shadow:0 1px 4px #0000000d}.proofline>span{max-width:430px;line-height:1.5}@media(max-width:640px){.proofline{align-items:flex-start;gap:10px;margin-top:28px}.avatars i{width:32px;height:32px}.proofline>span{font-size:13px}}.custom-art-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.hero-art.has-custom-image>.orb{display:none}.aboutvisual.has-custom-image>.orb2,.aboutvisual.has-custom-image:before,.aboutvisual.has-custom-image:after{display:none}.project-art.has-custom-image{background:#eee}.project-art.has-custom-image img{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover}';
 document.head.appendChild(editableImageStyle);
 // Match the rendered page order: About precedes the team gallery.
 const aboutSection = document.querySelector('#nosotros');
