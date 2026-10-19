@@ -49,7 +49,8 @@ function renderTeam(people) {
   const grid = document.querySelector('#teamGrid');
   if (!section || !grid || !Array.isArray(people)) return;
   const valid = people.filter(person => person && person.name && person.photo && /^https:\/\//i.test(person.photo));
-  if (!valid.length) { grid.replaceChildren(); section.hidden = true; return; }
+  // Preserve the official team gallery in index.html when no admin photos are saved.
+  if (!valid.length) { section.hidden = false; return; }
   grid.replaceChildren(...valid.map(person => {
     const card = document.createElement('article'); card.className = 'team-card reveal';
     const img = document.createElement('img'); img.src = person.photo; img.alt = `Foto de ${person.name}`; img.loading = 'lazy'; img.decoding = 'async';
@@ -118,10 +119,10 @@ function applyContent(content) {
   }
   setText('.contact h2', content.contactTitle); setText('.contactgrid > div > p', content.contactIntro);
   const links = document.querySelectorAll('.contactdetails a');
-  if (links[0] && content.phone) { links[0].href = `tel:${content.phone.replace(/[^+\d]/g, '')}`; links[0].lastChild.textContent = content.phone; }
+  if (links[0] && content.phone) { links[0].href = `tel:${content.phone.replace(/[^+\\d]/g, '')}`; links[0].lastChild.textContent = content.phone; }
   if (links[1] && content.email) { links[1].href = `mailto:${content.email}`; links[1].lastChild.textContent = content.email; }
   if (links[2] && content.mapUrl) links[2].href = content.mapUrl;
-  if (links[3] && content.website) { links[3].href = content.website; try{links[3].lastChild.textContent = new URL(content.website).hostname.replace(/^www\./, '');}catch{}}
+  if (links[3] && content.website) { links[3].href = content.website; try{links[3].lastChild.textContent = new URL(content.website).hostname.replace(/^www\\./, '');}catch{}}
   if (Array.isArray(content.extraText)) content.extraText = Object.fromEntries(content.extraText);
   if (content.extraText) Object.entries(content.extraText).forEach(([key,value])=>{
     const target=EXTRA_TARGETS[key];if(!target||typeof value!=='string')return;
@@ -150,4 +151,3 @@ try {
 } catch (error) {
   console.info('Se muestra el contenido local mientras se conecta el administrador.', error.message);
 }
-
