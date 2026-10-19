@@ -37,35 +37,35 @@
           <div class="field"><label for="service3Title">Servicio 3 · Título</label><input id="service3Title" required></div>
           <div class="field"><label for="service3Description">Servicio 3 · Descripción</label><textarea id="service3Description" required></textarea></div>
         </div></section>
-        <section class="card"><h2>Nosotros</h2><div class="grid">
+        
+        
+        
+        
+        
+        
+        
+        
+      <section class="card"><h2>Bloques y pasos</h2><div class="grid">
+          <div class="field full"><label for="benefits">Acompañamiento: un beneficio por línea (título | descripción)</label><textarea id="benefits" class="clients"></textarea></div>
+          <div class="field full"><label for="projects">Trabajos: un proyecto por línea (tipo: system, app o site | título | descripción | etiqueta)</label><textarea id="projects" class="clients"></textarea></div>
+          <div class="field full"><label for="steps">Cómo trabajamos: un paso por línea (título | descripción)</label><textarea id="steps" class="clients"></textarea></div>
+          <div class="field full"><label for="facts">Nosotros: un dato por línea (título | descripción)</label><textarea id="facts" class="clients"></textarea></div>
+          <span class="hint field full">Para reemplazar una foto o un logo, subí la imagen y copiá su enlace HTTPS en la fila correspondiente de Equipo o Empresas. Podés borrar filas para retirar elementos.</span>
+        </div></section><section class="card"><h2>Sobre nosotros</h2><div class="grid">
           <div class="field full"><label for="aboutTitle">Título</label><input id="aboutTitle" required></div>
           <div class="field full"><label for="aboutParagraphs">Párrafos (uno por línea)</label><textarea id="aboutParagraphs" required></textarea></div>
-        </div></section>
-        <section class="card"><h2>Contacto</h2><div class="grid">
+        </div></section><section class="card"><h2>Personas detrás de cada solución</h2><div class="field"><label for="team">Una persona por línea: nombre | cargo | enlace HTTPS de la foto</label><textarea id="team" class="clients" spellcheck="false" placeholder="Nombre | Cargo | https://..."></textarea><span class="hint">La web mostrará una sección con las personas que agregues. El cargo puede dejarse vacío. Atajo: pulsá espacio dos veces para insertar cada separador automáticamente; también podés escribir |.</span><label for="teamImages" style="margin-top:12px">Subir fotos desde tu dispositivo</label><input id="teamImages" type="file" accept="image/*" multiple><span class="hint">Elegí varias fotos. Se agregan con el nombre del archivo; editá nombre y cargo antes de guardar.</span><p class="status" id="teamUploadStatus" aria-live="polite"></p></div></section><section class="card"><h2>Empresas que confiaron</h2><div class="field"><label for="clients">Una empresa por línea: nombre | enlace HTTPS del logo</label><textarea id="clients" class="clients" spellcheck="false"></textarea><span class="hint">Ejemplo: Empresa S.A. | https://ejemplo.com/logo.png. Atajo: pulsá espacio dos veces después del nombre para insertar |.</span><label for="clientImages" style="margin-top:12px">Subir logos desde tu dispositivo</label><input id="clientImages" type="file" accept="image/*" multiple><span class="hint">Podés elegir varias imágenes. Se subirán a Supabase y se agregarán al listado con el nombre del archivo; después podés corregir cada nombre.</span><p class="status" id="uploadStatus" aria-live="polite"></p></div></section><section class="card"><h2>Contacto</h2><div class="grid">
           <div class="field"><label for="contactTitle">Título</label><input id="contactTitle" required></div>
           <div class="field"><label for="contactIntro">Descripción</label><textarea id="contactIntro" required></textarea></div>
           <div class="field"><label for="phone">Teléfono</label><input id="phone" required></div>
           <div class="field"><label for="email">Email</label><input id="email" type="email" required></div>
           <div class="field"><label for="mapUrl">Enlace de Google Maps</label><input id="mapUrl" type="url" required></div>
           <div class="field"><label for="website">Sitio oficial</label><input id="website" type="url" required></div>
-        </div></section>
-        <details class="card"><summary style="font:700 21px Manrope;cursor:pointer;margin-bottom:16px">Más contenido de la página</summary><p class="hint">Acá podés cambiar los textos que no aparecen en las secciones básicas de arriba.</p><div id="extraTextFields" class="grid"></div></details>
-        <section class="card"><h2>Bloques y pasos</h2><div class="grid">
-          <div class="field full"><label for="benefits">Acompañamiento: un beneficio por línea (título | descripción)</label><textarea id="benefits" class="clients"></textarea></div>
-          <div class="field full"><label for="projects">Trabajos: un proyecto por línea (tipo: system, app o site | título | descripción | etiqueta)</label><textarea id="projects" class="clients"></textarea></div>
-          <div class="field full"><label for="steps">Cómo trabajamos: un paso por línea (título | descripción)</label><textarea id="steps" class="clients"></textarea></div>
-          <div class="field full"><label for="facts">Nosotros: un dato por línea (título | descripción)</label><textarea id="facts" class="clients"></textarea></div>
-          <span class="hint field full">Para reemplazar una foto o un logo, subí la imagen y copiá su enlace HTTPS en la fila correspondiente de Equipo o Empresas. Podés borrar filas para retirar elementos.</span>
-        </div></section>
-        <section class="card"><h2>Marca y redes</h2><div class="grid">
+        </div></section><section class="card"><h2>Marca y redes</h2><div class="grid">
           <div class="field"><label for="instagramUrl">Instagram</label><input id="instagramUrl" type="url"></div><div class="field"><label for="facebookUrl">Facebook</label><input id="facebookUrl" type="url"></div>
           <div class="field"><label for="whatsappUrl">WhatsApp</label><input id="whatsappUrl" type="url"></div><div class="field"><label for="headerLogo">Logo de cabecera · HTTPS</label><input id="headerLogo" type="url"></div>
           <div class="field"><label for="footerLogo">Logo del pie · HTTPS</label><input id="footerLogo" type="url"></div>
-        </div></section>
-        <section class="card"><h2>Empresas que confiaron</h2><div class="field"><label for="clients">Una empresa por línea: nombre | enlace HTTPS del logo</label><textarea id="clients" class="clients" spellcheck="false"></textarea><span class="hint">Ejemplo: Empresa S.A. | https://ejemplo.com/logo.png. Atajo: pulsá espacio dos veces después del nombre para insertar |.</span><label for="clientImages" style="margin-top:12px">Subir logos desde tu dispositivo</label><input id="clientImages" type="file" accept="image/*" multiple><span class="hint">Podés elegir varias imágenes. Se subirán a Supabase y se agregarán al listado con el nombre del archivo; después podés corregir cada nombre.</span><p class="status" id="uploadStatus" aria-live="polite"></p></div></section>
-        <section class="card"><h2>Fotos del equipo</h2><div class="field"><label for="team">Una persona por línea: nombre | cargo | enlace HTTPS de la foto</label><textarea id="team" class="clients" spellcheck="false" placeholder="Nombre | Cargo | https://..."></textarea><span class="hint">La web mostrará una sección con las personas que agregues. El cargo puede dejarse vacío. Atajo: pulsá espacio dos veces para insertar cada separador automáticamente; también podés escribir |.</span><label for="teamImages" style="margin-top:12px">Subir fotos desde tu dispositivo</label><input id="teamImages" type="file" accept="image/*" multiple><span class="hint">Elegí varias fotos. Se agregan con el nombre del archivo; editá nombre y cargo antes de guardar.</span><p class="status" id="teamUploadStatus" aria-live="polite"></p></div></section>
-        <div class="actions"><button class="btn" id="save" type="submit">Guardar y publicar cambios</button><span class="status" id="saveStatus" aria-live="polite"></span></div>
-      </form>
+        </div></section><details class="card"><summary style="font:700 21px Manrope;cursor:pointer;margin-bottom:16px">Más contenido de la página</summary><p class="hint">Acá podés cambiar los textos que no aparecen en las secciones básicas de arriba.</p><div id="extraTextFields" class="grid"></div></details><div class="actions"><button class="btn" id="save" type="submit">Guardar y publicar cambios</button><span class="status" id="saveStatus" aria-live="polite"></span></div></form>
     </section>
   </main>
   <script type="module">
