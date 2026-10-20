@@ -34,6 +34,9 @@ function renderClients(clients) {
     valid.forEach(client => {
       const figure = document.createElement('figure'); figure.className = 'client-logo';
       const img = document.createElement('img'); img.src = client.logo; img.alt = `Logo de ${client.name}`; img.loading = 'lazy'; img.decoding = 'async';
+      const fitLogo = () => { if (img.naturalWidth > img.naturalHeight * 2.45) figure.classList.add('client-logo--wide'); };
+      img.addEventListener('load', fitLogo, { once: true });
+      if (img.complete) fitLogo();
       const caption = document.createElement('figcaption'); caption.textContent = client.name;
       figure.append(img, caption); group.appendChild(figure);
     });
@@ -42,6 +45,29 @@ function renderClients(clients) {
   track.replaceChildren(makeGroup(false), makeGroup(true));
   track.getAnimations().forEach(animation => animation.cancel());
   track.style.animation = 'none'; void track.offsetWidth; track.style.animation = '';
+}
+
+function renderCompanyProfiles(profiles) {
+  const grid = document.querySelector('#companyProfilesGrid');
+  if (!grid || !Array.isArray(profiles)) return;
+  const valid = profiles.filter(item => item && item.name && item.sector && item.description);
+  const section = grid.closest('.company-cases');
+  if (!valid.length) { if (section) section.hidden = true; return; }
+  if (section) section.hidden = false;
+  grid.replaceChildren(...valid.map(item => {
+    const card = document.createElement('article'); card.className = 'company-case reveal';
+    const sector = document.createElement('p'); sector.className = 'company-case-sector'; sector.textContent = item.sector;
+    const title = document.createElement('h3'); title.textContent = item.name;
+    const description = document.createElement('p'); description.textContent = item.description;
+    card.append(sector, title, description);
+    return card;
+  }));
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); }
+    }), { threshold: .12 });
+    grid.querySelectorAll('.reveal').forEach(card => observer.observe(card));
+  } else grid.querySelectorAll('.reveal').forEach(card => card.classList.add('visible'));
 }
 
 function renderTeam(people) {
@@ -106,7 +132,7 @@ const EXTRA_TARGETS = {
   worksEyebrow: ['.works .eyebrow'], worksTitle: ['.works .sectionhead h2'], filterAll: ['.filter[data-filter="all"]', true], filterApps: ['.filter[data-filter="app"]', true], filterSystems: ['.filter[data-filter="system"]', true], filterSites: ['.filter[data-filter="site"]', true], caseNote: ['.case-note'],
   processEyebrow: ['.process .eyebrow'], processTitle: ['.process .sectionhead h2'], processIntro: ['.process .sectionhead > p'],
   teamEyebrow: ['.team.section .eyebrow'], teamTitle: ['.team.section .sectionhead h2'], teamIntro: ['.team.section .sectionhead > p'],
-  trustIntro: ['.trustlabel'], trustCategory1: ['.trustlogos span:nth-child(1)'], trustCategory2: ['.trustlogos span:nth-child(2)'], trustCategory3: ['.trustlogos span:nth-child(3)'], trustCategory4: ['.trustlogos span:nth-child(4)'], clientsTitle: ['.clients-title'],
+  trustIntro: ['.trustlabel'], trustCategory1: ['.trustlogos span:nth-child(1)'], trustCategory2: ['.trustlogos span:nth-child(2)'], trustCategory3: ['.trustlogos span:nth-child(3)'], trustCategory4: ['.trustlogos span:nth-child(4)'], clientsTitle: ['.clients-title'], companyCasesEyebrow: ['.company-cases .eyebrow'], companyCasesTitle: ['#companyCasesTitle'], companyCasesIntro: ['.company-cases .sectionhead > p'], companyCasesSource: ['.company-cases-source'],
   aboutEyebrow: ['.aboutcopy .eyebrow'], aboutBadge: ['.about-badge'], contactEyebrow: ['.contact .eyebrow'],
   navServices: ['.links a[href="#servicios"]', true], navWorks: ['.links a[href="#trabajos"]', true], navProcess: ['.links a[href="#proceso"]', true], navAbout: ['.links a[href="#nosotros"]', true], navContact: ['.navcta', true], serviceEyebrow: ['.services .eyebrow'],
   serviceLink1: ['.service-grid .service:nth-child(1) .textlink', true], serviceLink2: ['.service-grid .service:nth-child(2) .textlink', true], serviceLink3: ['.service-grid .service:nth-child(3) .textlink', true], mapLabel: ['.map-float', true], socialInstagram: ['.social-pop a:nth-child(1)'], socialFacebook: ['.social-pop a:nth-child(2)'], socialWhatsapp: ['.social-pop a:nth-child(3)'], contactMapLabel: ['.contactdetails a:nth-child(3)', true], contactWebsiteLabel: ['.contactdetails a:nth-child(4)', true],
@@ -163,12 +189,13 @@ function applyContent(content) {
   setCustomImage('.chart', content.heroChartImage);
   setCustomImage('.aboutvisual', content.aboutImage);
   setCustomImage('.report-graph', content.reportGraphImage);
-  renderClients(content.clients); renderTeam(content.team);
+  renderClients(content.clients); renderCompanyProfiles(content.companyProfiles); renderTeam(content.team);
 }
 
 function setTextFor(root, selector, value) { const el=root.querySelector(selector);if(el&&value)el.textContent=value; }
 const editableImageStyle = document.createElement('style');
 editableImageStyle.textContent = '.proofline{max-width:560px;gap:14px}.avatars{flex:none;gap:4px}.avatars i{width:34px;height:34px;margin-left:0;font-size:10px;box-shadow:0 1px 4px #0000000d}.proofline>span{max-width:430px;line-height:1.5}@media(max-width:640px){.proofline{align-items:flex-start;gap:10px;margin-top:28px}.avatars i{width:32px;height:32px}.proofline>span{font-size:13px}}.custom-art-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.hero-art.has-custom-image>.orb,.hero-art.has-custom-image>.float-card,.hero-art.has-custom-image>.app-window{display:none}.chart.has-custom-image>svg{display:none}.aboutvisual.has-custom-image>.orb2,.aboutvisual.has-custom-image:before,.aboutvisual.has-custom-image:after{display:none}.report-graph.has-custom-image>svg{display:none}.project-art.has-custom-image{background:#eee}.project-art.has-custom-image img{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.team-grid:has(.team-logo){grid-template-columns:minmax(0,520px);justify-content:center}.team-card img.team-logo{width:min(100%,200px);height:220px;aspect-ratio:auto;object-fit:contain;background:transparent;padding:0;margin-inline:auto}';
+editableImageStyle.textContent += '.client-logo{width:178px;flex-basis:178px;min-height:150px;padding:12px}.client-logo img{height:82px;max-width:100%;object-fit:contain}.client-logo--wide{width:236px!important;flex-basis:236px!important}.client-logo--wide img{height:76px}@media(max-width:560px){.client-logo{width:154px;flex-basis:154px;min-height:136px;padding:10px}.client-logo img{height:70px}.client-logo--wide{width:210px!important;flex-basis:210px!important}.client-logo--wide img{height:68px}}.company-cases{background:#f2f2f0}.company-cases-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:36px}.company-case{min-height:235px;padding:26px;border:1px solid #dededb;border-radius:18px;background:#fff}.company-case-sector{margin:0 0 22px;color:#6d6d6d;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.company-case h3{margin:0 0 12px;font:700 22px Manrope,sans-serif;letter-spacing:-.04em;color:#161616}.company-case>p:last-child{margin:0;color:#5f5f5f;line-height:1.65}.company-cases-source{margin:24px 0 0;color:#717171;font-size:12px}@media(max-width:760px){.company-cases-grid{grid-template-columns:1fr}.company-case{min-height:0;padding:22px}.company-case-sector{margin-bottom:12px}}body[data-theme="dark"] .company-cases{background:#191919}body[data-theme="dark"] .company-case{background:#252525;border-color:#444}body[data-theme="dark"] .company-case h3{color:#f6f6f6}body[data-theme="dark"] .company-case>p:last-child{color:#d1d1d1}body[data-theme="dark"] .company-case-sector{color:#bdbdbd}body[data-theme="dark"] .company-cases-source{color:#c3c3c3}';
 document.head.appendChild(editableImageStyle);
 // Match the rendered page order: About precedes the team gallery.
 const aboutSection = document.querySelector('#nosotros');
