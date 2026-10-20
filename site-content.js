@@ -54,6 +54,9 @@ function renderTeam(people) {
   grid.replaceChildren(...valid.map(person => {
     const card = document.createElement('article'); card.className = 'team-card reveal';
     const img = document.createElement('img'); img.src = person.photo; img.alt = `Foto de ${person.name}`; img.loading = 'lazy'; img.decoding = 'async';
+    const fitWideLogo = () => { if (img.naturalWidth > img.naturalHeight * 2.4) img.classList.add('team-logo'); };
+    img.addEventListener('load', fitWideLogo, { once: true });
+    if (img.complete) fitWideLogo();
     const info = document.createElement('div'); info.className = 'team-info';
     const name = document.createElement('h3'); name.textContent = person.name; info.appendChild(name);
     if (person.role) { const role = document.createElement('p'); role.textContent = person.role; info.appendChild(role); }
@@ -165,7 +168,7 @@ function applyContent(content) {
 
 function setTextFor(root, selector, value) { const el=root.querySelector(selector);if(el&&value)el.textContent=value; }
 const editableImageStyle = document.createElement('style');
-editableImageStyle.textContent = '.proofline{max-width:560px;gap:14px}.avatars{flex:none;gap:4px}.avatars i{width:34px;height:34px;margin-left:0;font-size:10px;box-shadow:0 1px 4px #0000000d}.proofline>span{max-width:430px;line-height:1.5}@media(max-width:640px){.proofline{align-items:flex-start;gap:10px;margin-top:28px}.avatars i{width:32px;height:32px}.proofline>span{font-size:13px}}.custom-art-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.hero-art.has-custom-image>.orb,.hero-art.has-custom-image>.float-card,.hero-art.has-custom-image>.app-window{display:none}.chart.has-custom-image>svg{display:none}.aboutvisual.has-custom-image>.orb2,.aboutvisual.has-custom-image:before,.aboutvisual.has-custom-image:after{display:none}.report-graph.has-custom-image>svg{display:none}.project-art.has-custom-image{background:#eee}.project-art.has-custom-image img{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover}';
+editableImageStyle.textContent = '.proofline{max-width:560px;gap:14px}.avatars{flex:none;gap:4px}.avatars i{width:34px;height:34px;margin-left:0;font-size:10px;box-shadow:0 1px 4px #0000000d}.proofline>span{max-width:430px;line-height:1.5}@media(max-width:640px){.proofline{align-items:flex-start;gap:10px;margin-top:28px}.avatars i{width:32px;height:32px}.proofline>span{font-size:13px}}.custom-art-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.hero-art.has-custom-image>.orb,.hero-art.has-custom-image>.float-card,.hero-art.has-custom-image>.app-window{display:none}.chart.has-custom-image>svg{display:none}.aboutvisual.has-custom-image>.orb2,.aboutvisual.has-custom-image:before,.aboutvisual.has-custom-image:after{display:none}.report-graph.has-custom-image>svg{display:none}.project-art.has-custom-image{background:#eee}.project-art.has-custom-image img{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.team-card img.team-logo{object-fit:contain;background:#f2f2f2;padding:clamp(22px,4vw,48px)}';
 document.head.appendChild(editableImageStyle);
 // Match the rendered page order: About precedes the team gallery.
 const aboutSection = document.querySelector('#nosotros');
