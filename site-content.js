@@ -37,7 +37,28 @@ function renderClients(clients) {
       if (logoName.includes('organizacion de los estados') || logoName.startsWith('oea')) figure.classList.add('client-logo--oea');
       if (logoName.includes('ruta 10')) figure.classList.add('client-logo--ruta');
       if (logoName === 'shell') figure.classList.add('client-logo--shell');
-      const img = document.createElement('img'); img.src = client.logo; img.alt = `Logo de ${client.name}`; img.loading = 'lazy'; img.decoding = 'async';
+      const img = document.createElement('img');
+      // Older Supabase content still points to this project's former GitHub Pages
+      // hostname. Rebase those bundled client assets to the site currently serving
+      // the page, so the same committed logos work on the Linux deployment too.
+      let logoUrl = client.logo;
+      try {
+        const parsedLogo = new URL(client.logo);
+        const oldRepoPrefix = '/cosmesoft_prueba/assets/clients/';
+        if (parsedLogo.hostname === 'mathigaleto.github.io' && parsedLogo.pathname.startsWith(oldRepoPrefix)) {
+          logoUrl = `${location.origin}/assets/clients/${parsedLogo.pathname.slice(oldRepoPrefix.length)}${parsedLogo.search}`;
+        }
+      } catch {}
+      img.src = logoUrl; img.alt = `Logo de ${client.name}`; img.loading = 'lazy'; img.decoding = 'async';
+      img.addEventListener('error', () => {
+        if (logoUrl !== client.logo) return;
+        try {
+          const parsedLogo = new URL(client.logo);
+          if (parsedLogo.hostname === 'mathigaleto.github.io' && parsedLogo.pathname.startsWith('/cosmesoft_prueba/assets/clients/')) {
+            img.src = `${location.origin}/assets/clients/${parsedLogo.pathname.split('/').pop()}${parsedLogo.search}`;
+          }
+        } catch {}
+      }, { once: true });
       const fitLogo = () => { if (img.naturalWidth > img.naturalHeight * 2.45) figure.classList.add('client-logo--wide'); };
       img.addEventListener('load', fitLogo, { once: true });
       if (img.complete) fitLogo();
