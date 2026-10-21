@@ -44,6 +44,7 @@ insert into public.site_content (id, content) values (1, '{
   "mapUrl":"https://maps.app.goo.gl/X7Y8Stce1qh8MJxH7",
   "website":"https://prueba.cosmesoft.com.py/",
   "clients":[
+    {"name":"Cosmesoft","logo":"https://prueba.cosmesoft.com.py/assets/clients/cosmesoft.webp"},
     {"name":"Multi Envíos Sociedad Anónima","logo":"https://prueba.cosmesoft.com.py/assets/clients/multienvios.webp"},
     {"name":"Jaraha Encomiendas","logo":"https://prueba.cosmesoft.com.py/assets/clients/jaraha-encomiendas.webp"},
     {"name":"Estopas Total","logo":"https://prueba.cosmesoft.com.py/assets/clients/estopas-total.webp"},
@@ -117,5 +118,3 @@ create policy "Cosmesoft admin can delete site images"
     bucket_id = 'site-images'
     and (select auth.jwt() ->> 'email') = 'mathigaleto@gmail.com'
   );
-
-
