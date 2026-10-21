@@ -74,33 +74,6 @@ function renderCompanyProfiles(profiles) {
   } else grid.querySelectorAll('.reveal').forEach(card => card.classList.add('visible'));
 }
 
-function renderTeam(people) {
-  const section = document.querySelector('#teamSection');
-  const grid = document.querySelector('#teamGrid');
-  if (!section || !grid || !Array.isArray(people)) return;
-  const valid = people.filter(person => person && person.name && person.photo && /^https:\/\//i.test(person.photo));
-  // Preserve the official team gallery in index.html when no admin photos are saved.
-  if (!valid.length) { section.hidden = false; return; }
-  grid.replaceChildren(...valid.map(person => {
-    const card = document.createElement('article'); card.className = 'team-card reveal';
-    const img = document.createElement('img'); img.src = person.photo; img.alt = `Foto de ${person.name}`; img.loading = 'lazy'; img.decoding = 'async';
-    const fitWideLogo = () => { if (img.naturalWidth > img.naturalHeight * 2.4) img.classList.add('team-logo'); };
-    img.addEventListener('load', fitWideLogo, { once: true });
-    if (img.complete) fitWideLogo();
-    const info = document.createElement('div'); info.className = 'team-info';
-    const name = document.createElement('h3'); name.textContent = person.name; info.appendChild(name);
-    if (person.role) { const role = document.createElement('p'); role.textContent = person.role; info.appendChild(role); }
-    card.append(img, info); return card;
-  }));
-  section.hidden = false;
-  if ('IntersectionObserver' in window) {
-    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
-      if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); }
-    }), { threshold: .12 });
-    grid.querySelectorAll('.reveal').forEach(card => observer.observe(card));
-  } else grid.querySelectorAll('.reveal').forEach(card => card.classList.add('visible'));
-}
-
 function updateItems(selector, items, fields, className) {
   const container = document.querySelector(selector);
   if (!container || !Array.isArray(items) || !items.length) return;
@@ -135,7 +108,7 @@ const EXTRA_TARGETS = {
   heroArtLabel: ['.fc1 .card-label'], heroArtMetric: ['.fc1 .metric'], heroWindowTitle: ['.window-top > span:first-child'], heroWindowHeading: ['.dash-title'], heroWindowText: ['.dash-sub'], heroCardLabel: ['.fc2 .card-label'], heroCardText: ['.fc2 > div:nth-child(2)'], heroCardSubtext: ['.fc2 > div:nth-child(3)'], heroArtFooter: ['.fc3'],
   worksEyebrow: ['.works .eyebrow'], worksTitle: ['.works .sectionhead h2'], filterAll: ['.filter[data-filter="all"]', true], filterApps: ['.filter[data-filter="app"]', true], filterSystems: ['.filter[data-filter="system"]', true], filterSites: ['.filter[data-filter="site"]', true], caseNote: ['.case-note'],
   processEyebrow: ['.process .eyebrow'], processTitle: ['.process .sectionhead h2'], processIntro: ['.process .sectionhead > p'],
-  teamEyebrow: ['.team.section .eyebrow'], teamTitle: ['.team.section .sectionhead h2'], teamIntro: ['.team.section .sectionhead > p'],
+
   trustIntro: ['.trustlabel'], trustCategory1: ['.trustlogos span:nth-child(1)'], trustCategory2: ['.trustlogos span:nth-child(2)'], trustCategory3: ['.trustlogos span:nth-child(3)'], trustCategory4: ['.trustlogos span:nth-child(4)'], clientsTitle: ['.clients-title'], companyCasesEyebrow: ['.company-cases .eyebrow'], companyCasesTitle: ['#companyCasesTitle'], companyCasesIntro: ['.company-cases .sectionhead > p'], companyCasesSource: ['.company-cases-source'],
   aboutEyebrow: ['.aboutcopy .eyebrow'], aboutBadge: ['.about-badge'], contactEyebrow: ['.contact .eyebrow'],
   navServices: ['.links a[href="#servicios"]', true], navWorks: ['.links a[href="#trabajos"]', true], navProcess: ['.links a[href="#proceso"]', true], navAbout: ['.links a[href="#nosotros"]', true], navContact: ['.navcta', true], serviceEyebrow: ['.services .eyebrow'],
@@ -193,23 +166,15 @@ function applyContent(content) {
   setCustomImage('.chart', content.heroChartImage);
   setCustomImage('.aboutvisual', content.aboutImage);
   setCustomImage('.report-graph', content.reportGraphImage);
-  renderClients(content.clients); renderCompanyProfiles(content.companyProfiles); renderTeam(content.team);
+  renderClients(content.clients); renderCompanyProfiles(content.companyProfiles);
 }
 
 function setTextFor(root, selector, value) { const el=root.querySelector(selector);if(el&&value)el.textContent=value; }
 const editableImageStyle = document.createElement('style');
-editableImageStyle.textContent = '.proofline{max-width:560px;gap:14px}.avatars{flex:none;gap:4px}.avatars i{width:34px;height:34px;margin-left:0;font-size:10px;box-shadow:0 1px 4px #0000000d}.proofline>span{max-width:430px;line-height:1.5}@media(max-width:640px){.proofline{align-items:flex-start;gap:10px;margin-top:28px}.avatars i{width:32px;height:32px}.proofline>span{font-size:13px}}.custom-art-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.hero-art.has-custom-image>.orb,.hero-art.has-custom-image>.float-card,.hero-art.has-custom-image>.app-window{display:none}.chart.has-custom-image>svg{display:none}.aboutvisual.has-custom-image>.orb2,.aboutvisual.has-custom-image:before,.aboutvisual.has-custom-image:after{display:none}.report-graph.has-custom-image>svg{display:none}.project-art.has-custom-image{background:#eee}.project-art.has-custom-image img{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.team-grid:has(.team-logo){grid-template-columns:minmax(0,520px);justify-content:center}.team-card img.team-logo{width:min(100%,200px);height:220px;aspect-ratio:auto;object-fit:contain;background:transparent;padding:0;margin-inline:auto}';
+editableImageStyle.textContent = '.proofline{max-width:560px;gap:14px}.avatars{flex:none;gap:4px}.avatars i{width:34px;height:34px;margin-left:0;font-size:10px;box-shadow:0 1px 4px #0000000d}.proofline>span{max-width:430px;line-height:1.5}@media(max-width:640px){.proofline{align-items:flex-start;gap:10px;margin-top:28px}.avatars i{width:32px;height:32px}.proofline>span{font-size:13px}}.custom-art-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.hero-art.has-custom-image>.orb,.hero-art.has-custom-image>.float-card,.hero-art.has-custom-image>.app-window{display:none}.chart.has-custom-image>svg{display:none}.aboutvisual.has-custom-image>.orb2,.aboutvisual.has-custom-image:before,.aboutvisual.has-custom-image:after{display:none}.report-graph.has-custom-image>svg{display:none}.project-art.has-custom-image{background:#eee}.project-art.has-custom-image img{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover}';
 editableImageStyle.textContent += '.client-logo{width:178px;flex-basis:178px;min-height:150px;padding:12px}.client-logo img{height:82px;max-width:100%;object-fit:contain}.client-logo--wide{width:236px!important;flex-basis:236px!important}.client-logo--wide img{height:76px}@media(max-width:560px){.client-logo{width:154px;flex-basis:154px;min-height:136px;padding:10px}.client-logo img{height:70px}.client-logo--wide{width:210px!important;flex-basis:210px!important}.client-logo--wide img{height:68px}}.company-cases{background:#f2f2f0}.company-cases-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:36px}.company-case{min-height:235px;padding:26px;border:1px solid #dededb;border-radius:18px;background:#fff}.company-case-sector{margin:0 0 22px;color:#6d6d6d;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.company-case h3{margin:0 0 12px;font:700 22px Manrope,sans-serif;letter-spacing:-.04em;color:#161616}.company-case>p:last-child{margin:0;color:#5f5f5f;line-height:1.65}.company-cases-source{margin:24px 0 0;color:#717171;font-size:12px}@media(max-width:760px){.company-cases-grid{grid-template-columns:1fr}.company-case{min-height:0;padding:22px}.company-case-sector{margin-bottom:12px}}body[data-theme="dark"] .company-cases{background:#191919}body[data-theme="dark"] .company-case{background:#252525;border-color:#444}body[data-theme="dark"] .company-case h3{color:#f6f6f6}body[data-theme="dark"] .company-case>p:last-child{color:#d1d1d1}body[data-theme="dark"] .company-case-sector{color:#bdbdbd}body[data-theme="dark"] .company-cases-source{color:#c3c3c3}';
 editableImageStyle.textContent += '.client-logo--oea{width:220px!important;flex-basis:220px!important;min-height:178px!important}.client-logo--oea img{height:112px!important}.client-logo--ruta{width:360px!important;flex-basis:360px!important}.client-logo--ruta img{height:100px!important}.client-logo--shell{width:190px!important;flex-basis:190px!important;min-height:162px!important}.client-logo--shell img{height:100px!important}@media(max-width:560px){.client-logo--oea{width:186px!important;flex-basis:186px!important;min-height:156px!important}.client-logo--oea img{height:92px!important}.client-logo--ruta{width:310px!important;flex-basis:310px!important}.client-logo--ruta img{height:88px!important}.client-logo--shell{width:164px!important;flex-basis:164px!important;min-height:144px!important}.client-logo--shell img{height:86px!important}}';
 document.head.appendChild(editableImageStyle);
-const compactTeamLogoStyle = document.createElement('style');
-compactTeamLogoStyle.textContent = '.team-grid:has(.team-logo){grid-template-columns:minmax(0,360px);justify-content:center}.team-card:has(.team-logo){display:flex;flex-direction:column;justify-content:center;min-height:185px;padding:26px}.team-card img.team-logo{width:min(100%,250px);height:auto;max-height:76px;aspect-ratio:auto;object-fit:contain;background:transparent;padding:0;margin:0 auto 16px}.team-card:has(.team-logo) .team-info{text-align:center;padding:0}';
-document.head.appendChild(compactTeamLogoStyle);
-
-// Match the rendered page order: About precedes the team gallery.
-const aboutSection = document.querySelector('#nosotros');
-const teamSection = document.querySelector('#teamSection');
-if (aboutSection && teamSection) teamSection.before(aboutSection);
 
 
 // Manual company carousel controls: pause at the first logo and allow bounded scrolling.
