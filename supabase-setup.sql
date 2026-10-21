@@ -39,25 +39,33 @@ insert into public.site_content (id, content) values (1, '{
   ],
   "contactTitle":"Tu próxima idea empieza con una conversación.",
   "contactIntro":"Contanos qué necesitás. Estamos para escucharte, entender el desafío y explorar juntos el camino.",
-  "phone":"+595 985 291 060",
-  "email":"contacto@cosmesoft.com.py",
+  "phone":"+595 994 618 000",
+  "email":"gdb@cosmesoft.com.py",
   "mapUrl":"https://maps.app.goo.gl/X7Y8Stce1qh8MJxH7",
-  "website":"https://www.cosmesoft.com.py/",
+  "website":"https://prueba.cosmesoft.com.py/",
   "clients":[
-    {"name":"C&C","logo":"https://www.cosmesoft.com.py/wp-content/uploads/2018/08/client-cyc-768x768.png"},
-    {"name":"CEAMSO","logo":"https://www.cosmesoft.com.py/wp-content/uploads/2018/08/client-ceamso-768x768.png"},
-    {"name":"Santa Fé Empanadas","logo":"https://www.cosmesoft.com.py/wp-content/uploads/2018/08/client-santaFe-768x768.png"},
-    {"name":"Monitor","logo":"https://www.cosmesoft.com.py/wp-content/uploads/2018/08/client-monitor-768x768.png"},
-    {"name":"MATIZ S.A.","logo":"https://www.cosmesoft.com.py/wp-content/uploads/2018/08/client-matiz-768x768.png"},
-    {"name":"Fundación Saraki","logo":"https://www.cosmesoft.com.py/wp-content/uploads/2018/08/client-saraki-768x768.png"},
-    {"name":"DNCP","logo":"https://www.cosmesoft.com.py/wp-content/uploads/2018/08/client-dncp-768x768.png"},
-    {"name":"Contraloría General de la República","logo":"https://www.cosmesoft.com.py/wp-content/uploads/2018/08/client-contraloria-768x768.png"},
-    {"name":"Importadora ND S.A.","logo":"https://www.cosmesoft.com.py/wp-content/uploads/2018/08/client-nd-1-768x768.png"},
-    {"name":"Motopiezas","logo":"https://www.cosmesoft.com.py/wp-content/uploads/2018/08/logo-motopiezas-768x768.png"},
-    {"name":"anubesport","logo":"https://www.cosmesoft.com.py/wp-content/uploads/2018/08/client-anube-768x768.png"},
-    {"name":"Pedazo de Cielo Posada","logo":"https://www.cosmesoft.com.py/wp-content/uploads/2018/08/client-cielo-768x768.png"},
-    {"name":"Cloragua NABG","logo":"https://www.cosmesoft.com.py/wp-content/uploads/2018/08/client-cloragua-768x768.png"},
-    {"name":"Masquelier Medicina Integrativa","logo":"https://www.cosmesoft.com.py/wp-content/uploads/2018/08/client-masquelier-768x768.png"}
+    {"name":"Multi Envíos Sociedad Anónima","logo":"https://prueba.cosmesoft.com.py/assets/clients/multienvios.webp"},
+    {"name":"Jaraha Encomiendas","logo":"https://prueba.cosmesoft.com.py/assets/clients/jaraha-encomiendas.webp"},
+    {"name":"Estopas Total","logo":"https://prueba.cosmesoft.com.py/assets/clients/estopas-total.webp"},
+    {"name":"Alsetec","logo":"https://prueba.cosmesoft.com.py/assets/clients/alsetec.webp"},
+    {"name":"CeConsult","logo":"https://prueba.cosmesoft.com.py/assets/clients/ceconsult.webp"},
+    {"name":"Dableyu Seven Encomiendas Express","logo":"https://prueba.cosmesoft.com.py/assets/clients/dobleu-seven.webp"},
+    {"name":"RE/MAX Paraguay","logo":"https://prueba.cosmesoft.com.py/assets/clients/remax-paraguay.webp"},
+    {"name":"Grupo Miaterra","logo":"https://prueba.cosmesoft.com.py/assets/clients/grupo-miaterra.webp"},
+    {"name":"Filtrona","logo":"https://prueba.cosmesoft.com.py/assets/clients/filtrona.webp"},
+    {"name":"GS Concretos","logo":"https://prueba.cosmesoft.com.py/assets/clients/gs-concretos.webp"},
+    {"name":"Occidental Express","logo":"https://prueba.cosmesoft.com.py/assets/clients/occidental-express.webp"},
+    {"name":"Organización de los Estados Americanos","logo":"https://prueba.cosmesoft.com.py/assets/clients/oea.webp"},
+    {"name":"Ruta 10 S.R.L.","logo":"https://prueba.cosmesoft.com.py/assets/clients/ruta-10.webp"},
+    {"name":"Matiz S.A.E.","logo":"https://prueba.cosmesoft.com.py/assets/clients/matiz.webp"},
+    {"name":"Monitor","logo":"https://prueba.cosmesoft.com.py/assets/clients/monitor-soft.webp"},
+    {"name":"T&C","logo":"https://prueba.cosmesoft.com.py/assets/clients/tc.webp"},
+    {"name":"Hard & Soft S.A.","logo":"https://prueba.cosmesoft.com.py/assets/clients/hard-soft.webp"},
+    {"name":"Reino Frío","logo":"https://prueba.cosmesoft.com.py/assets/clients/reino-frio.webp"},
+    {"name":"Salesianos Paraguay","logo":"https://prueba.cosmesoft.com.py/assets/clients/salesianos-paraguay.webp"},
+    {"name":"Fundación Saraki","logo":"https://prueba.cosmesoft.com.py/assets/clients/fundacion-saraki.webp"},
+    {"name":"Ingenio Azucarero La Felsina A.C.S.A.","logo":"https://prueba.cosmesoft.com.py/assets/clients/ingenio-la-felsina.webp"},
+    {"name":"Shell","logo":"https://prueba.cosmesoft.com.py/assets/clients/shell.webp"}
   ]
 }'::jsonb)
 on conflict (id) do nothing;
@@ -109,4 +117,5 @@ create policy "Cosmesoft admin can delete site images"
     bucket_id = 'site-images'
     and (select auth.jwt() ->> 'email') = 'mathigaleto@gmail.com'
   );
+
 
