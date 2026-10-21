@@ -113,7 +113,7 @@ const EXTRA_TARGETS = {
   aboutEyebrow: ['.aboutcopy .eyebrow'], aboutBadge: ['.about-badge'], contactEyebrow: ['.contact .eyebrow'],
   navServices: ['.links a[href="#servicios"]', true], navWorks: ['.links a[href="#trabajos"]', true], navProcess: ['.links a[href="#proceso"]', true], navAbout: ['.links a[href="#nosotros"]', true], navContact: ['.navcta', true], serviceEyebrow: ['.services .eyebrow'],
   serviceLink1: ['.service-grid .service:nth-child(1) .textlink', true], serviceLink2: ['.service-grid .service:nth-child(2) .textlink', true], serviceLink3: ['.service-grid .service:nth-child(3) .textlink', true], mapLabel: ['.map-float', true], socialInstagram: ['.social-pop a:nth-child(1)'], socialFacebook: ['.social-pop a:nth-child(2)'], socialWhatsapp: ['.social-pop a:nth-child(3)'], contactMapLabel: ['.contactdetails a:nth-child(3)', true], contactWebsiteLabel: ['.contactdetails a:nth-child(4)', true],
-  footerServices: ['.footerlinks a[href="#servicios"]'], footerWorks: ['.footerlinks a[href="#trabajos"]'], footerContact: ['.footerlinks a[href="#contacto"]'], footerWebsite: ['.footerlinks a[href^="https://www.cosmesoft.com.py"]', true],
+  footerServices: ['.footerlinks a[href="#servicios"]'], footerWorks: ['.footerlinks a[href="#trabajos"]'], footerContact: ['.footerlinks a[href="#contacto"]'], footerWebsite: ['.footerlinks a[href^="https://prueba.cosmesoft.com.py"]', true],
   formNameLabel: ['label[for="nombre"]'], formCompanyLabel: ['label[for="empresa"]'], formEmailLabel: ['label[for="email"]'], formMessageLabel: ['label[for="mensaje"]'], formButton: ['#contactForm button', true], formHint: ['.formhint'], footerText: ['#footerCopy']
 };
 
