@@ -70,8 +70,8 @@ const headingTargets=document.querySelectorAll(".hero h1,.sectionhead h2,.aboutc
    const scheduleMeasure=()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(measure);};
    scheduleMeasure();
    window.addEventListener('load',scheduleMeasure,{once:true});
-   window.addEventListener('cosmesoft:clients-updated',scheduleMeasure);
-   if('ResizeObserver'in window){const resizeObserver=new ResizeObserver(scheduleMeasure);resizeObserver.observe(marquee);if(sourceGroup())resizeObserver.observe(sourceGroup());}
+    let resizeObserver=null;
+    if('ResizeObserver'in window){resizeObserver=new ResizeObserver(scheduleMeasure);resizeObserver.observe(marquee);if(sourceGroup())resizeObserver.observe(sourceGroup());}
    if(document.fonts&&document.fonts.ready)document.fonts.ready.then(scheduleMeasure);
     const pauseForManual=()=>{
       const offset=animationOffset(),width=groupWidth();
@@ -96,7 +96,10 @@ const headingTargets=document.querySelectorAll(".hero h1,.sectionhead h2,.aboutc
      marqueeButton.setAttribute('aria-pressed',String(paused));
    };
     const visibilityObserver=new IntersectionObserver(entries=>entries.forEach(entry=>entry.target.classList.toggle('is-fully-visible',entry.isIntersecting&&entry.intersectionRatio>=.995)),{root:marquee,rootMargin:'0px -1px',threshold:[0,.995]});
-    marqueeTrack.querySelectorAll('.client-logo').forEach(card=>visibilityObserver.observe(card));
+    const observedCards=new WeakSet();
+    const observeCards=()=>marqueeTrack.querySelectorAll('.client-logo').forEach(card=>{if(!observedCards.has(card)){observedCards.add(card);visibilityObserver.observe(card);}});
+    observeCards();
+    window.addEventListener('cosmesoft:clients-updated',()=>{observeCards();if(resizeObserver&&sourceGroup())resizeObserver.observe(sourceGroup());scheduleMeasure();});
     if(reducedMotion.matches)setPaused(true);else scheduleMeasure();
     marqueeButton.addEventListener('click',()=>setPaused(!marquee.classList.contains('is-manual')));
     marquee.addEventListener('pointerdown',event=>{if(!marquee.classList.contains('is-manual')||event.pointerType!=='mouse'||event.button!==0)return;isDragging=true;dragOriginX=event.clientX;dragOriginScroll=marquee.scrollLeft;marquee.classList.add('is-dragging');marquee.setPointerCapture(event.pointerId);event.preventDefault();});
