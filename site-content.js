@@ -66,6 +66,7 @@ function renderClients(clients) {
     return group;
   };
   track.replaceChildren(makeGroup(false), makeGroup(true));
+  window.dispatchEvent(new Event('cosmesoft:clients-updated'));
 }
 
 function renderCompanyProfiles(profiles) {
