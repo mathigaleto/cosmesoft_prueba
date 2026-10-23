@@ -24,7 +24,7 @@ function renderClients(clients) {
   if (!track || !Array.isArray(clients)) return;
   const section = track.closest('.clients');
   if (!clients.length) { track.replaceChildren(); if (section) section.hidden = true; return; }
-  const valid = clients.filter(client => client && client.name && client.logo && /^https:\/\//i.test(client.logo));
+  const valid = clients.filter(client => client && client.name && client.logo && /^https:\/\//i.test(client.logo)).sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
   if (!valid.length) { track.replaceChildren(); if (section) section.hidden = true; return; }
   if (section) section.hidden = false;
   const makeGroup = hidden => {
@@ -73,6 +73,10 @@ function renderCompanyProfiles(profiles) {
   const grid = document.querySelector('#companyProfilesGrid');
   if (!grid || !Array.isArray(profiles)) return;
   const valid = profiles.filter(item => item && item.name && item.sector && item.description);
+  const importance = ['pingerp', 'monitor one ping rutas', 'ping hotelero', 'ping academio', 'ping inmobiliarias', 'ping tsm logix one', 'ping taller', 'monitor one vision 360', 'inteligencia artificial aplicada'];
+  const normalizeName = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  const priority = item => { const index = importance.indexOf(normalizeName(item.name)); return index < 0 ? importance.length : index; };
+  valid.sort((a, b) => priority(a) - priority(b));
   const section = grid.closest('.company-cases');
   if (!valid.length) { if (section) section.hidden = true; return; }
   if (section) section.hidden = false;
@@ -182,6 +186,7 @@ function applyContent(content) {
   if(content.instagramUrl)document.querySelector('.social-pop a:nth-child(1)')?.setAttribute('href',content.instagramUrl);
   if(content.facebookUrl)document.querySelector('.social-pop a:nth-child(2)')?.setAttribute('href',content.facebookUrl);
   if(content.whatsappUrl)document.querySelector('.social-pop a:nth-child(3)')?.setAttribute('href',content.whatsappUrl);
+  [['instagram', content.instagramUrl], ['facebook', content.facebookUrl], ['whatsapp', content.whatsappUrl]].forEach(([network, url]) => { if (url) document.querySelectorAll('[data-social="' + network + '"]').forEach(link => link.href = url); });
   const headerLogo=document.querySelector('.nav .brand-logo');if(headerLogo){const applyHeaderLogo=()=>{const light=content.headerLogo||headerLogo.dataset.themeLight||headerLogo.src;const dark=content.headerLogoDark||headerLogo.dataset.themeDark||light;headerLogo.src=document.body.dataset.theme==='dark'?dark:light;};applyHeaderLogo();new MutationObserver(applyHeaderLogo).observe(document.body,{attributes:true,attributeFilter:['data-theme']});}
   if(content.footerLogo){const logo=document.querySelector('.footer-logo');if(logo)logo.src=content.footerLogo;}
   if(Array.isArray(content.benefits))updateItems('.benefits',content.benefits,[['b','title'],['span','description']]);
