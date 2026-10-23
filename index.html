@@ -42,47 +42,43 @@
 const headingTargets=document.querySelectorAll(".hero h1,.sectionhead h2,.aboutcopy h2,.contact h2"); headingTargets.forEach(el=>{const spoken=el.textContent.replace(/\s+/g," ").trim();el.setAttribute("aria-label",spoken);el.classList.add("letter-reveal");const wordStagger=el.matches(".aboutcopy h2");if(wordStagger)el.classList.add("word-stagger");let wordIndex=0;const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);let index=0;nodes.forEach(node=>{const fragment=document.createDocumentFragment();for(const piece of node.nodeValue.split(/(\s+)/)){if(/^\s+$/.test(piece)){fragment.appendChild(document.createTextNode(piece));continue;}const word=document.createElement("span");word.className="letter-word";for(const char of Array.from(piece)){const span=document.createElement("span");span.className="letter";span.setAttribute("aria-hidden","true");span.style.setProperty("--letter-index",index++);span.textContent=char;word.appendChild(span);}if(wordStagger){const mask=document.createElement("span");mask.className="word-mask";mask.style.setProperty("--word-index",wordIndex++);mask.appendChild(word);fragment.appendChild(mask);}else{fragment.appendChild(word);}}node.replaceWith(fragment);});}); const letterObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add("letters-visible");letterObserver.unobserve(entry.target);}}),{threshold:.2}); headingTargets.forEach(el=>letterObserver.observe(el)); const marquee=document.querySelector('#clientMarquee'),marqueeTrack=document.querySelector('#clientTrack'),marqueeButton=document.querySelector('#marqueeToggle');
 if(marquee&&marqueeTrack&&marqueeButton){
   const marqueeStyle=document.createElement('style');
-  marqueeStyle.textContent='.client-marquee.is-showcase{overflow:hidden!important;mask-image:none!important;-webkit-mask-image:none!important}.client-track.is-showcase{display:block!important;width:100%!important;transform:none!important;animation:none!important;will-change:auto!important}.client-group.is-showcase{display:grid!important;grid-template-columns:repeat(var(--client-slots),minmax(0,1fr))!important;gap:14px!important;width:100%!important;padding:0!important;transition:opacity .28s ease}.client-track.is-showcase .client-group[aria-hidden="true"]{display:none!important}.client-group.is-showcase .client-logo{display:none!important;width:auto!important;min-width:0!important;flex:initial!important;min-height:150px!important;opacity:1;transition:none}.client-group.is-showcase .client-logo.is-visible{display:flex!important}.client-group.is-showcase.is-changing{opacity:0}.client-group.is-showcase .client-logo--ruta img{width:100%!important;height:74px!important;max-width:84%!important;object-fit:contain!important}.client-marquee.is-manual{overflow-x:auto!important;overflow-y:hidden!important;mask-image:none!important;-webkit-mask-image:none!important;scrollbar-width:thin;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x;cursor:grab;scroll-snap-type:x mandatory;scroll-padding-inline:0}.client-marquee.is-manual.is-dragging{cursor:grabbing}.client-marquee.is-manual .client-track{animation:none!important;transform:none!important;will-change:auto!important}.client-marquee.is-manual .client-group[aria-hidden="true"]{display:none!important}.client-marquee.is-manual .client-group{display:flex!important;width:max-content!important;padding-right:14px!important}.client-marquee.is-manual .client-logo{scroll-snap-align:start}.client-marquee.is-manual .client-logo--ruta{width:min(154px,calc(100vw - 36px))!important;flex:0 0 min(154px,calc(100vw - 36px))!important;min-height:136px!important}.client-marquee.is-manual .client-logo--ruta img{height:66px!important;max-width:84%!important}';
+  marqueeStyle.textContent='.client-marquee.is-carousel{overflow-x:auto!important;overflow-y:hidden!important;mask-image:none!important;-webkit-mask-image:none!important;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-behavior:smooth;touch-action:pan-x;cursor:grab}.client-marquee.is-carousel::-webkit-scrollbar{display:none}.client-marquee.is-carousel.is-dragging{cursor:grabbing}.client-track.is-carousel{display:flex!important;width:max-content!important;transform:none!important;animation:none!important;will-change:auto!important}.client-group.is-carousel{display:flex!important;flex:0 0 auto!important;align-items:stretch;gap:14px!important;width:max-content!important;padding:0 14px 0 0!important;transition:opacity .22s ease}.client-group.is-carousel .client-logo{width:var(--client-card-width)!important;flex:0 0 var(--client-card-width)!important;min-width:0!important;min-height:150px!important;scroll-snap-align:start;transition:none}.client-group.is-carousel .client-logo img{width:min(138px,calc(var(--client-card-width) - 28px))!important;height:76px!important;max-width:90%!important;object-fit:contain!important}.client-group.is-carousel .client-logo--ruta img{width:min(138px,calc(var(--client-card-width) - 28px))!important;height:76px!important;max-width:90%!important;object-fit:contain!important}.client-marquee.is-carousel.is-resetting{opacity:0;scroll-behavior:auto!important}.client-track.is-carousel .client-group[aria-hidden="true"]{display:none!important}.client-marquee.is-carousel.is-resetting *{scroll-behavior:auto!important}';
   document.head.appendChild(marqueeStyle);
-  const manualMode=window.matchMedia('(max-width:760px), (pointer:coarse), (prefers-reduced-motion:reduce)');
-  let manual=manualMode.matches,paused=false,startIndex=0,slots=1,rotateTimer=0,fadeTimer=0,isDragging=false,dragOriginX=0,dragOriginScroll=0;
+  const reducedMotion=window.matchMedia('(prefers-reduced-motion:reduce)');
+  let cards=[],slots=1,cardWidth=178,step=192,stepIndex=0,paused=reducedMotion.matches,rotationTimer=0,resumeTimer=0,scrollTimer=0,isDragging=false,dragOriginX=0,dragOriginScroll=0;
   const sourceGroup=()=>marqueeTrack.querySelector('.client-group:not([aria-hidden="true"])');
-  const sourceCards=()=>Array.from(sourceGroup()?.querySelectorAll('.client-logo')||[]);
-  const stopRotation=()=>{if(rotateTimer){clearInterval(rotateTimer);rotateTimer=0;}if(fadeTimer){clearTimeout(fadeTimer);fadeTimer=0;}};
-  const showManual=()=>{
-    stopRotation();manual=true;marquee.classList.remove('is-showcase');marquee.classList.add('is-manual');marqueeTrack.classList.remove('is-showcase');marqueeTrack.classList.remove('is-ready');
-    const group=sourceGroup();if(group){group.classList.remove('is-showcase','is-changing');group.querySelectorAll('.client-logo').forEach(card=>card.classList.remove('is-visible'));}
-    marqueeButton.disabled=true;marqueeButton.textContent='Deslizá para ver más';marqueeButton.setAttribute('aria-label','Deslizá para recorrer los logos');marqueeButton.setAttribute('aria-pressed','false');
+  const measure=()=>{
+    const group=sourceGroup();if(!group)return;
+    cards=Array.from(group.querySelectorAll('.client-logo'));if(!cards.length)return;
+    const width=marquee.clientWidth||group.clientWidth||320,gap=14,minCardWidth=width<=760?132:178;
+    slots=Math.min(6,Math.max(1,Math.floor((width+gap)/(minCardWidth+gap))));
+    cardWidth=Math.max(1,(width-gap*(slots-1))/slots);step=cardWidth+gap;
+    group.style.setProperty('--client-card-width',`${cardWidth}px`);group.classList.add('is-carousel');
+    marquee.classList.add('is-carousel');marquee.classList.remove('is-manual','is-showcase','is-resetting');
+    marqueeTrack.classList.add('is-carousel');marqueeTrack.classList.remove('is-ready','is-showcase');
+    marqueeTrack.querySelectorAll('.client-group[aria-hidden="true"]').forEach(clone=>{clone.style.display='none';});
+    stepIndex=Math.min(stepIndex,Math.max(0,cards.length-slots));
   };
-  const showWindow=()=>{
-    const group=sourceGroup(),cards=sourceCards();if(!group||!cards.length)return;
-    const nextSlots=Math.min(6,Math.max(1,Math.floor((marquee.clientWidth+14)/192)));
-    if(nextSlots!==slots){slots=nextSlots;startIndex=0;}
-    group.style.setProperty('--client-slots',slots);group.classList.add('is-showcase');group.classList.remove('is-changing');
-    cards.forEach(card=>card.classList.remove('is-visible'));
-    for(let i=0;i<Math.min(slots,cards.length);i++){const card=cards[(startIndex+i)%cards.length],image=card.querySelector('img');if(image)image.loading='eager';card.classList.add('is-visible');}
-    marquee.classList.add('is-showcase');marquee.classList.remove('is-manual');marqueeTrack.classList.add('is-showcase');marqueeTrack.classList.remove('is-ready');
+  const stopRotation=()=>{if(rotationTimer){clearInterval(rotationTimer);rotationTimer=0;}if(resumeTimer){clearTimeout(resumeTimer);resumeTimer=0;}};
+  const updateStepFromScroll=()=>{if(!cards.length)return;let nearest=0,best=Infinity;const left=marquee.getBoundingClientRect().left;cards.forEach((card,index)=>{const distance=Math.abs(card.getBoundingClientRect().left-left);if(distance<best){best=distance;nearest=index;}});stepIndex=Math.min(nearest,Math.max(0,cards.length-slots));};
+  const advance=()=>{
+    if(paused||cards.length<=slots)return;
+    const lastStart=Math.max(0,cards.length-slots);
+    if(stepIndex>=lastStart){marquee.classList.add('is-resetting');window.setTimeout(()=>{marquee.scrollTo({left:0,behavior:'auto'});stepIndex=0;marquee.classList.remove('is-resetting');},240);return;}
+    stepIndex++;marquee.scrollTo({left:stepIndex*step,behavior:'smooth'});
   };
-  const startRotation=()=>{
-    stopRotation();if(manual||paused)return;
-    rotateTimer=window.setInterval(()=>{
-      const group=sourceGroup(),cards=sourceCards();if(!group||cards.length<=slots)return;
-      group.classList.add('is-changing');fadeTimer=window.setTimeout(()=>{
-        startIndex=(startIndex+slots)%cards.length;showWindow();group.classList.remove('is-changing');
-      },280);
-    },5200);
-  };
-  const refresh=()=>{if(manual){showManual();return;}showWindow();startRotation();};
-  const syncMode=()=>{if(manualMode.matches&&!manual)showManual();else if(!manualMode.matches&&manual){manual=false;startIndex=0;refresh();}};
-  if(manual)showManual();else refresh();
+  const startRotation=()=>{stopRotation();if(paused||reducedMotion.matches)return;rotationTimer=window.setInterval(advance,3900);};
+  const refresh=()=>{const oldIndex=stepIndex;measure();marquee.classList.add('is-resetting');marquee.scrollLeft=Math.min(oldIndex*step,Math.max(0,marquee.scrollWidth-marquee.clientWidth));requestAnimationFrame(()=>{marquee.classList.remove('is-resetting');updateStepFromScroll();startRotation();});};
+  refresh();
   window.addEventListener('cosmesoft:clients-updated',()=>requestAnimationFrame(refresh));
-  if('ResizeObserver'in window){const resizeObserver=new ResizeObserver(()=>{if(manual){marquee.scrollLeft=0;}else refresh();});resizeObserver.observe(marquee);}
-  if(manualMode.addEventListener)manualMode.addEventListener('change',syncMode);else manualMode.addListener(syncMode);
-  marqueeButton.addEventListener('click',()=>{if(manual)return;paused=!paused;marqueeButton.textContent=paused?'Reanudar':'Pausar';marqueeButton.setAttribute('aria-label',paused?'Reanudar movimiento de empresas':'Pausar movimiento de empresas');marqueeButton.setAttribute('aria-pressed',String(paused));if(paused)stopRotation();else startRotation();});
-  marquee.addEventListener('touchstart',()=>{if(!manual)showManual();},{passive:true});
-  marquee.addEventListener('mousedown',event=>{if(!manual||event.button!==0)return;isDragging=true;dragOriginX=event.clientX;dragOriginScroll=marquee.scrollLeft;marquee.classList.add('is-dragging');event.preventDefault();});
-  window.addEventListener('mousemove',event=>{if(isDragging)marquee.scrollLeft=dragOriginScroll-(event.clientX-dragOriginX);});
-  window.addEventListener('mouseup',()=>{isDragging=false;marquee.classList.remove('is-dragging');});
+  if('ResizeObserver'in window){const resizeObserver=new ResizeObserver(()=>refresh());resizeObserver.observe(marquee);}
+  marqueeButton.disabled=reducedMotion.matches;marqueeButton.textContent=paused?(reducedMotion.matches?'Movimiento automático desactivado':'Reanudar'):'Pausar';marqueeButton.setAttribute('aria-label',paused?'Reanudar movimiento de empresas':'Pausar movimiento de empresas');marqueeButton.setAttribute('aria-pressed',String(paused));
+  marqueeButton.addEventListener('click',()=>{paused=!paused;marqueeButton.textContent=paused?'Reanudar':'Pausar';marqueeButton.setAttribute('aria-label',paused?'Reanudar movimiento de empresas':'Pausar movimiento de empresas');marqueeButton.setAttribute('aria-pressed',String(paused));if(paused)stopRotation();else startRotation();});
+  marquee.addEventListener('scroll',()=>{clearTimeout(scrollTimer);scrollTimer=window.setTimeout(updateStepFromScroll,120);},{passive:true});
+  marquee.addEventListener('pointerdown',event=>{if(event.pointerType==='mouse'&&event.button===0){isDragging=true;dragOriginX=event.clientX;dragOriginScroll=marquee.scrollLeft;marquee.classList.add('is-dragging');marquee.setPointerCapture(event.pointerId);event.preventDefault();}stopRotation();clearTimeout(resumeTimer);resumeTimer=window.setTimeout(startRotation,6500);},{passive:false});
+  marquee.addEventListener('pointermove',event=>{if(isDragging)marquee.scrollLeft=dragOriginScroll-(event.clientX-dragOriginX);});
+  const endDrag=()=>{isDragging=false;marquee.classList.remove('is-dragging');};marquee.addEventListener('pointerup',endDrag);marquee.addEventListener('pointercancel',endDrag);
+  if(reducedMotion.addEventListener)reducedMotion.addEventListener('change',()=>{paused=reducedMotion.matches;marqueeButton.disabled=paused;marqueeButton.textContent=paused?'Movimiento automático desactivado':'Pausar';marqueeButton.setAttribute('aria-pressed',String(paused));if(paused)stopRotation();else startRotation();});else reducedMotion.addListener(()=>{paused=reducedMotion.matches;marqueeButton.disabled=paused;if(paused)stopRotation();else startRotation();});
 }const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}}),{threshold:.12});document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
   document.querySelector('#year').textContent=new Date().getFullYear();
   document.querySelector('#contactForm').addEventListener('submit',e=>{e.preventDefault();const d=new FormData(e.currentTarget),subject=encodeURIComponent('Consulta desde el sitio web — '+(d.get('empresa')||d.get('nombre'))),body=encodeURIComponent(`Nombre: ${d.get('nombre')}\nEmpresa: ${d.get('empresa')||'No especificada'}\nEmail: ${d.get('email')}\n\nProyecto:\n${d.get('mensaje')}`);location.href=`mailto:gdb@cosmesoft.com.py?subject=${subject}&body=${body}`});
