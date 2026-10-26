@@ -71,7 +71,7 @@
   </main>
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-    import { findClientLogo, openClientCvPdf, sanitizeRichHtml } from './client-cv.js?v=pdf-download-20261026';
+      import { findClientLogo, openClientCvPdf, sanitizeRichHtml } from './client-cv.js?v=pdf-render-and-underline-20261026';
     const URL='https://jeonzbisrwukbpvydcyh.supabase.co';
     const KEY='sb_publishable_c4VeVqtYXYGMtzTBoBfiKg_gCf_vut-';
     const ADMIN='mathigaleto@gmail.com';
@@ -116,7 +116,7 @@
         select.value=resolved||'';select.addEventListener('change',()=>{preview.src=select.value;preview.hidden=!select.value});logoWrap.appendChild(select);fields.appendChild(logoWrap);
         const descWrap=document.createElement('div');descWrap.className='cv-admin-rich-wrap';const descLabel=document.createElement('span');descLabel.className='cv-admin-rich-label';descLabel.textContent='Detalles de la experiencia';descWrap.appendChild(descLabel);
         const toolbar=document.createElement('div');toolbar.className='cv-admin-toolbar';
-        [['bold','B'],['italic','I'],['underline','U'],['insertUnorderedList','• Lista']].forEach(([command,label])=>{const button=document.createElement('button');button.type='button';button.textContent=label;button.title=command;button.setAttribute('aria-label',`Aplicar ${label}`);button.addEventListener('mousedown',event=>event.preventDefault());button.addEventListener('click',()=>{rich.focus();document.execCommand(command,false,null)});toolbar.appendChild(button)});
+        [['bold','B'],['italic','I'],['underline','U'],['insertUnorderedList','• Lista']].forEach(([command,label])=>{const button=document.createElement('button');button.type='button';button.textContent=label;button.title=command;button.setAttribute('aria-label',`Aplicar ${label}`);let savedRange=null;const keepSelection=event=>{if(event.type==='mousedown')event.preventDefault();const selection=window.getSelection();if(selection?.rangeCount&&rich.contains(selection.anchorNode)&&rich.contains(selection.focusNode))savedRange=selection.getRangeAt(0).cloneRange()};button.addEventListener('mousedown',keepSelection);button.addEventListener('touchstart',keepSelection,{passive:true});button.addEventListener('click',()=>{rich.focus();const selection=window.getSelection();if(savedRange&&selection){selection.removeAllRanges();selection.addRange(savedRange)}document.execCommand(command,false,null);savedRange=null});toolbar.appendChild(button)});
         const rich=document.createElement('div');rich.className='cv-admin-rich';rich.contentEditable='true';rich.dataset.cvRich='description';rich.setAttribute('role','textbox');rich.setAttribute('aria-multiline','true');rich.setAttribute('aria-label',`Detalles de ${item.company||'la experiencia'}`);rich.innerHTML=sanitizeRichHtml(item.description||'');rich.dataset.placeholder='Agregá contexto adicional si hace falta…';
         descWrap.append(toolbar,rich);card.appendChild(descWrap);clientCvList.appendChild(card);
       });

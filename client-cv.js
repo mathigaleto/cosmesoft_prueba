@@ -53,16 +53,20 @@ export async function openClientCvPdf(cv, clients = []) {
   const data = cv && Array.isArray(cv.items) ? cv : {title: 'Experiencias en implementación de PingERP', intro: '', items: []};
   const host = document.createElement('div');
   host.setAttribute('aria-hidden', 'true');
-  host.style.cssText = 'position:fixed;left:-10000px;top:0;width:703px;padding:0;background:#fff;color:#202124;z-index:-1;font:14px/1.5 Arial,sans-serif;box-sizing:border-box';
+  host.style.cssText = 'position:relative;left:auto;top:auto;width:703px;padding:0;margin:0 auto;background:#fff;color:#202124;font:14px/1.5 Arial,sans-serif;box-sizing:border-box';
   const style = document.createElement('style');
-  style.textContent = '*{box-sizing:border-box}.cv-pdf-title{font-size:28px;line-height:1.2;margin:0 0 8px}.cv-pdf-intro{margin:0 0 22px;color:#555}.cv-pdf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.cv-pdf-card{break-inside:avoid;page-break-inside:avoid;display:grid;grid-template-columns:92px minmax(0,1fr);gap:14px;align-items:start;padding:14px;border:1px solid #dedede;border-radius:12px;background:#fff}.cv-pdf-card img{width:88px;height:76px;object-fit:contain}.cv-pdf-card h2{font-size:17px;line-height:1.3;margin:0 0 5px}.cv-pdf-pill{display:inline-block;margin-bottom:5px;padding:3px 9px;border-radius:20px;background:#edf2f1;font-size:11px;font-weight:bold}.cv-pdf-fact{font-size:12px;margin:4px 0;color:#444}.cv-pdf-card ul,.cv-pdf-card ol{padding-left:18px}.cv-pdf-card p,.cv-pdf-card li{orphans:3;widows:3}';
+  style.textContent = '*{box-sizing:border-box}.cv-pdf-title{font-size:28px;line-height:1.2;margin:0 0 8px}.cv-pdf-intro{margin:0 0 22px;color:#555}.cv-pdf-grid{display:block}.cv-pdf-card{break-inside:avoid;page-break-inside:avoid;display:grid;grid-template-columns:92px minmax(0,1fr);gap:14px;align-items:start;margin:0 0 12px;padding:14px;border:1px solid #dedede;border-radius:12px;background:#fff}.cv-pdf-card img{width:88px;height:76px;object-fit:contain}.cv-pdf-card h2{font-size:17px;line-height:1.3;margin:0 0 5px}.cv-pdf-pill{display:inline-block;margin-bottom:5px;padding:3px 9px;border-radius:20px;background:#edf2f1;font-size:11px;font-weight:bold}.cv-pdf-fact{font-size:12px;margin:4px 0;color:#444}.cv-pdf-card ul,.cv-pdf-card ol{padding-left:18px}.cv-pdf-card p,.cv-pdf-card li{orphans:3;widows:3}';
+  const overlay = document.createElement('div');
+  overlay.setAttribute('role', 'status'); overlay.setAttribute('aria-live', 'polite');
+  overlay.textContent = 'Preparando el PDF…';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:11001;display:grid;place-items:center;background:rgba(255,255,255,.96);color:#222;font:600 16px Arial,sans-serif';
   const title = document.createElement('h1'); title.className = 'cv-pdf-title'; title.textContent = data.title || 'Experiencias en implementación de PingERP';
   const intro = document.createElement('p'); intro.className = 'cv-pdf-intro'; intro.textContent = data.intro || '';
   const grid = document.createElement('main'); grid.className = 'cv-pdf-grid';
   for (const item of data.items.filter(entry => entry && entry.company)) {
     const card = document.createElement('article'); card.className = 'cv-pdf-card';
     const logoUrl = findClientLogo(item, clients);
-    if (logoUrl) { const image = document.createElement('img'); image.src = logoUrl; image.alt = 'Logo de ' + item.company; image.crossOrigin = 'anonymous'; card.appendChild(image); }
+    if (logoUrl) { const image = document.createElement('img'); image.crossOrigin = 'anonymous'; image.src = logoUrl; image.alt = 'Logo de ' + item.company; card.appendChild(image); }
     else { const empty = document.createElement('span'); empty.setAttribute('aria-hidden', 'true'); card.appendChild(empty); }
     const content = document.createElement('div');
     const company = document.createElement('h2'); company.textContent = item.company; content.appendChild(company);
@@ -76,7 +80,7 @@ export async function openClientCvPdf(cv, clients = []) {
     if (item.description) { const description = document.createElement('div'); description.className = 'cv-pdf-fact'; description.innerHTML = sanitizeRichHtml(item.description); content.appendChild(description); }
     card.appendChild(content); grid.appendChild(card);
   }
-  host.append(style, title, intro, grid); document.body.appendChild(host);
+  host.append(style, title, intro, grid); document.body.append(host, overlay);
   try {
     const html2pdf = await loadPdfLibrary();
     await Promise.all([...host.querySelectorAll('img')].map(image => image.decode?.().catch(() => {}) || Promise.resolve()));
@@ -92,6 +96,6 @@ export async function openClientCvPdf(cv, clients = []) {
     console.error('No se pudo descargar el CV en PDF', error);
     window.alert('No se pudo descargar el PDF. Revisá tu conexión e intentá de nuevo.');
   } finally {
-    host.remove();
+    overlay.remove(); host.remove();
   }
 }
