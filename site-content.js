@@ -75,17 +75,31 @@ function renderClients(clients) {
       gallery = document.createElement('div'); gallery.className = 'client-gallery';
       const button = document.createElement('button');
       button.className = 'clients-view-all'; button.type = 'button';
-      button.setAttribute('aria-expanded', 'false'); button.setAttribute('aria-controls', 'clientGrid');
+      button.setAttribute('aria-expanded', 'false'); button.setAttribute('aria-controls', 'clientGalleryModal');
       button.textContent = 'Ver todos';
+      const modal = document.createElement('div'); modal.className = 'client-modal'; modal.id = 'clientGalleryModal';
+      modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-modal', 'true');
+      modal.setAttribute('aria-labelledby', 'clientGalleryTitle'); modal.hidden = true;
+      const panel = document.createElement('div'); panel.className = 'client-modal-panel';
+      const header = document.createElement('div'); header.className = 'client-modal-header';
+      const title = document.createElement('h2'); title.id = 'clientGalleryTitle'; title.textContent = 'Empresas que confiaron en nosotros';
+      const close = document.createElement('button'); close.className = 'client-modal-close'; close.type = 'button';
+      close.setAttribute('aria-label', 'Cerrar galería de logos'); close.textContent = '×';
       const grid = document.createElement('div'); grid.className = 'client-grid'; grid.id = 'clientGrid';
-      grid.setAttribute('aria-label', 'Todos los logos de empresas'); grid.hidden = true;
+      grid.setAttribute('aria-label', 'Todos los logos de empresas');
+      const closeModal = () => {
+        modal.hidden = true; button.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('client-modal-open'); button.focus();
+      };
       button.addEventListener('click', () => {
-        const expanded = button.getAttribute('aria-expanded') !== 'true';
-        button.setAttribute('aria-expanded', String(expanded));
-        button.textContent = expanded ? 'Ver menos' : 'Ver todos';
-        grid.hidden = !expanded;
+        modal.hidden = false; button.setAttribute('aria-expanded', 'true');
+        document.body.classList.add('client-modal-open'); close.focus();
       });
-      gallery.append(button, grid);
+      close.addEventListener('click', closeModal);
+      modal.addEventListener('click', event => { if (event.target === modal) closeModal(); });
+      modal.addEventListener('keydown', event => { if (event.key === 'Escape') closeModal(); });
+      header.append(title, close); panel.append(header, grid); modal.appendChild(panel);
+      gallery.append(button, modal);
       marquee.insertAdjacentElement('afterend', gallery);
     }
     gallery.querySelector('.client-grid')?.replaceChildren(...valid.map(makeCard));
