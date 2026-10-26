@@ -24,7 +24,9 @@ const normalize = value => String(value || '').normalize('NFD').replace(/[\u0300
 
 export function findClientLogo(item, clients = []) {
   if (/^https:\/\//i.test(item?.logo || '')) return item.logo;
-  const wanted = normalize(item?.logoClient || item?.company);
+  const company = normalize(item?.logoClient || item?.company);
+  if (/(^|\s)w\s*7(\s|$)/i.test(company)) return '/assets/clients/dobleu-seven.webp?v=w7-cv-20261026';
+  const wanted = company;
   if (!wanted) return '';
   const exact = clients.find(client => normalize(client?.name) === wanted);
   if (exact && /^https:\/\//i.test(exact.logo || '')) return exact.logo;
