@@ -71,6 +71,7 @@
   </main>
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    import { DEFAULT_CLIENT_CV, findClientLogo, openClientCvPdf, sanitizeRichHtml } from './client-cv.js?v=client-cv-20261026';
     const URL='https://jeonzbisrwukbpvydcyh.supabase.co';
     const KEY='sb_publishable_c4VeVqtYXYGMtzTBoBfiKg_gCf_vut-';
     const ADMIN='mathigaleto@gmail.com';
@@ -92,7 +93,61 @@
     ];
     EXTRA_FIELDS.forEach(([key,label])=>{const wrap=document.createElement('div');wrap.className='field';const l=document.createElement('label');l.htmlFor=`extra_${key}`;l.textContent=label;const input=document.createElement('input');input.id=`extra_${key}`;input.dataset.extraKey=key;wrap.append(l,input);$('extraTextFields').append(wrap)});
     const CLIENT_LOGO_PACK=[{"slug":"cosmesoft","name":"Cosmesoft","aliases":[]},{"slug":"multienvios","name":"Multi Envíos Sociedad Anónima","aliases":[]},{"slug":"jaraha-encomiendas","name":"Jaraha Encomiendas","aliases":[]},{"slug":"estopas-total","name":"Estopas Total","aliases":[]},{"slug":"alsetec","name":"Alsetec","aliases":[]},{"slug":"ceconsult","name":"CeConsult","aliases":[]},{"slug":"dobleu-seven","name":"Dableyu Seven Encomiendas Express","aliases":[]},{"slug":"remax-paraguay","name":"RE/MAX Paraguay","aliases":[]},{"slug":"grupo-miaterra","name":"Grupo Miaterra","aliases":[]},{"slug":"filtrona","name":"Filtrona","aliases":[]},{"slug":"gs-concretos","name":"GS Concretos","aliases":[]},{"slug":"occidental-express","name":"Occidental Express","aliases":[]},{"slug":"oea","name":"Organización de los Estados Americanos","aliases":[]},{"slug":"ruta-10","name":"Ruta 10 S.R.L.","aliases":[]},{"slug":"matiz","name":"Matiz S.A.E.","aliases":["MATIZ S.A."]},{"slug":"monitor-soft","name":"Monitor","aliases":["Monitor"]},{"slug":"tc","name":"T&C","aliases":[]},{"slug":"hard-soft","name":"Hard & Soft S.A.","aliases":[]},{"slug":"reino-frio","name":"Reino Frío","aliases":[]},{"slug":"salesianos-paraguay","name":"Salesianos Paraguay","aliases":[]},{"slug":"fundacion-saraki","name":"Fundación Saraki","aliases":["Saraki"]},{"slug":"ingenio-la-felsina","name":"Ingenio Azucarero La Felsina A.C.S.A.","aliases":[]},{"slug":"shell","name":"Shell","aliases":[]}];
-    let current={};
+    let current={},clientCvDraft=JSON.parse(JSON.stringify(DEFAULT_CLIENT_CV)),clientCvModal=null,clientCvList=null;
+    const cvNormalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+    function readClientLogoOptions(){return $('clients').value.split('\n').map(line=>{const i=line.indexOf('|');return i<0?null:{name:line.slice(0,i).trim(),logo:line.slice(i+1).trim()}}).filter(item=>item?.name&&/^https:\/\//i.test(item.logo));}
+    function makeCvField(labelText,value,field,card,multiline=false){const wrap=document.createElement('label');wrap.className='cv-admin-field';wrap.textContent=labelText;const input=document.createElement(multiline?'textarea':'input');input.dataset.cvField=field;if(multiline)input.rows=2;input.value=value||'';wrap.appendChild(input);card.appendChild(wrap);return input;}
+    function renderClientCvAdmin(){
+      if(!clientCvList)return;clientCvList.replaceChildren();const logos=readClientLogoOptions();
+      clientCvDraft.items.forEach((item,index)=>{
+        const card=document.createElement('article');card.className='cv-admin-entry';card.dataset.index=String(index);
+        const top=document.createElement('div');top.className='cv-admin-entry-head';
+        const preview=document.createElement('img');preview.className='cv-admin-logo-preview';preview.alt='Vista previa del logo';
+        const resolved=item.logo||findClientLogo(item,logos);if(resolved){preview.src=resolved;preview.hidden=false}else preview.hidden=true;
+        const company=document.createElement('input');company.dataset.cvField='company';company.value=item.company||'';company.setAttribute('aria-label','Empresa');company.placeholder='Nombre de la empresa';
+        const remove=document.createElement('button');remove.type='button';remove.className='cv-admin-remove';remove.textContent='Quitar';remove.setAttribute('aria-label',`Quitar ${item.company||'experiencia'}`);
+        remove.addEventListener('click',()=>{clientCvDraft=collectClientCv(true);clientCvDraft.items.splice(index,1);renderClientCvAdmin()});top.append(preview,company,remove);card.appendChild(top);
+        const fields=document.createElement('div');fields.className='cv-admin-fields';card.appendChild(fields);
+        [['Solución o módulos','solution'],['Rubro','sector'],['Ubicación','location']].forEach(([label,key])=>makeCvField(label,item[key],key,fields));
+        const logoWrap=document.createElement('label');logoWrap.className='cv-admin-field';logoWrap.textContent='Logo de la empresa';
+        const select=document.createElement('select');select.dataset.cvField='logo';const blank=document.createElement('option');blank.value='';blank.textContent='Seleccionar logo';select.appendChild(blank);
+        logos.forEach(option=>{const node=document.createElement('option');node.value=option.logo;node.textContent=option.name;node.dataset.name=option.name;select.appendChild(node)});
+        if(resolved&&!logos.some(option=>option.logo===resolved)){const custom=document.createElement('option');custom.value=resolved;custom.textContent='Logo actual';select.appendChild(custom)}
+        select.value=resolved||'';select.addEventListener('change',()=>{preview.src=select.value;preview.hidden=!select.value});logoWrap.appendChild(select);fields.appendChild(logoWrap);
+        const descWrap=document.createElement('div');descWrap.className='cv-admin-rich-wrap';const descLabel=document.createElement('span');descLabel.className='cv-admin-rich-label';descLabel.textContent='Detalles de la experiencia';descWrap.appendChild(descLabel);
+        const toolbar=document.createElement('div');toolbar.className='cv-admin-toolbar';
+        [['bold','B'],['italic','I'],['underline','U'],['insertUnorderedList','• Lista']].forEach(([command,label])=>{const button=document.createElement('button');button.type='button';button.textContent=label;button.title=command;button.setAttribute('aria-label',`Aplicar ${label}`);button.addEventListener('mousedown',event=>event.preventDefault());button.addEventListener('click',()=>{rich.focus();document.execCommand(command,false,null)});toolbar.appendChild(button)});
+        const rich=document.createElement('div');rich.className='cv-admin-rich';rich.contentEditable='true';rich.dataset.cvRich='description';rich.setAttribute('role','textbox');rich.setAttribute('aria-multiline','true');rich.setAttribute('aria-label',`Detalles de ${item.company||'la experiencia'}`);rich.innerHTML=sanitizeRichHtml(item.description||'');rich.dataset.placeholder='Agregá contexto adicional si hace falta…';
+        descWrap.append(toolbar,rich);card.appendChild(descWrap);clientCvList.appendChild(card);
+      });
+    }
+    function collectClientCv(includeEmpty=false){
+      if(!clientCvList)return JSON.parse(JSON.stringify(clientCvDraft));
+      const items=[...clientCvList.querySelectorAll('.cv-admin-entry')].map(card=>{
+        const get=field=>card.querySelector(`[data-cv-field="${field}"]`);
+        const selected=get('logo'),logoOption=selected?.selectedOptions?.[0];
+        return {company:get('company')?.value.trim()||'',solution:get('solution')?.value.trim()||'',sector:get('sector')?.value.trim()||'',location:get('location')?.value.trim()||'',logo:selected?.value||'',logoClient:logoOption?.dataset.name||'',description:sanitizeRichHtml(card.querySelector('[data-cv-rich="description"]')?.innerHTML||'')};
+      }).filter(item=>includeEmpty||item.company);
+      return {title:$('clientCvTitleInput').value.trim(),intro:$('clientCvIntroInput').value.trim(),items};
+    }
+    function mountClientCvAdmin(data){
+      clientCvDraft=JSON.parse(JSON.stringify(data&&Array.isArray(data.items)?data:DEFAULT_CLIENT_CV));
+      if(!clientCvModal){
+        const style=document.createElement('style');style.id='clientCvAdminStyles';style.textContent='#openClientCvEditor{flex:none}.client-cv-admin-modal[hidden]{display:none!important}.client-cv-admin-modal{position:fixed;inset:0;z-index:1100;display:grid;place-items:center;padding:20px;background:rgba(0,0,0,.7);backdrop-filter:blur(5px)}body.cv-admin-open{overflow:hidden}.client-cv-admin-panel{width:min(100%,1000px);height:min(92vh,900px);display:flex;flex-direction:column;overflow:hidden;padding:22px;border-radius:18px;border:1px solid #ddd;background:#fff;box-shadow:0 20px 70px #0005}.cv-admin-header,.cv-admin-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;flex:none}.cv-admin-header{padding-bottom:14px;border-bottom:1px solid #eee}.cv-admin-header h2{margin:0;font:700 24px Manrope,sans-serif}.cv-admin-close{width:40px;height:40px;border:1px solid #ddd;border-radius:50%;background:#fff;color:#111;font:28px Arial;cursor:pointer}.cv-admin-intro{margin:12px 0;font-size:13px;color:#555}.cv-admin-topfields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}.cv-admin-field{display:grid;gap:6px;font-size:12px;font-weight:700;color:#444}.cv-admin-field input,.cv-admin-field textarea,.cv-admin-field select,.cv-admin-entry-head>input{width:100%;min-width:0;padding:9px 11px;border:1px solid #d7d7d7;border-radius:9px;background:#fff;color:#161616;font:13px "DM Sans",sans-serif}.cv-admin-list{flex:1;min-height:0;overflow:auto;padding:2px 4px 12px 0;display:grid;align-content:start;gap:12px}.cv-admin-entry{padding:14px;border:1px solid #ddd;border-radius:14px;background:#fafafa}.cv-admin-entry-head{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:10px;align-items:center;margin-bottom:12px}.cv-admin-logo-preview{width:72px;height:52px;object-fit:contain;padding:4px;border:1px solid #e4e4e4;border-radius:8px;background:#fff}.cv-admin-logo-preview[hidden]{display:block;visibility:hidden}.cv-admin-remove{padding:8px 11px;border:1px solid #ddd;border-radius:9px;background:#fff;color:#555;cursor:pointer}.cv-admin-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.cv-admin-rich-wrap{margin-top:12px}.cv-admin-rich-label{display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#444}.cv-admin-toolbar{display:flex;gap:6px;margin-bottom:6px}.cv-admin-toolbar button{min-width:34px;padding:6px 9px;border:1px solid #ddd;border-radius:7px;background:#fff;font-weight:700;cursor:pointer}.cv-admin-toolbar button:nth-child(2){font-style:italic}.cv-admin-toolbar button:nth-child(3){text-decoration:underline}.cv-admin-rich{min-height:54px;padding:10px 12px;border:1px solid #d7d7d7;border-radius:9px;background:#fff;font-size:13px;line-height:1.5}.cv-admin-rich:empty:before{content:attr(data-placeholder);color:#929292}.cv-admin-footer{padding-top:14px;border-top:1px solid #eee}.cv-admin-footer .actions{margin:0}.cv-admin-note{margin-right:auto;font-size:12px;color:#777}@media(max-width:640px){.client-cv-admin-modal{padding:8px}.client-cv-admin-panel{height:96vh;padding:14px;border-radius:14px}.cv-admin-header h2{font-size:19px}.cv-admin-topfields,.cv-admin-fields{grid-template-columns:1fr}.cv-admin-entry-head{grid-template-columns:58px minmax(0,1fr) auto;gap:7px}.cv-admin-logo-preview{width:58px;height:46px}.cv-admin-footer{flex-wrap:wrap}.cv-admin-note{width:100%;order:3}}';document.head.appendChild(style);
+        const launcher=document.createElement('button');launcher.id='openClientCvEditor';launcher.className='btn secondary';launcher.type='button';launcher.textContent='CV PingERP';launcher.setAttribute('aria-haspopup','dialog');document.querySelector('.editor-menu')?.appendChild(launcher);
+        clientCvModal=document.createElement('div');clientCvModal.id='clientCvAdminModal';clientCvModal.className='client-cv-admin-modal';clientCvModal.hidden=true;clientCvModal.setAttribute('role','dialog');clientCvModal.setAttribute('aria-modal','true');clientCvModal.setAttribute('aria-labelledby','clientCvAdminTitle');
+        const panel=document.createElement('div');panel.className='client-cv-admin-panel';const header=document.createElement('header');header.className='cv-admin-header';const heading=document.createElement('h2');heading.id='clientCvAdminTitle';heading.textContent='CV de experiencias PingERP';const close=document.createElement('button');close.className='cv-admin-close';close.type='button';close.textContent='×';close.setAttribute('aria-label','Cerrar editor de CV');header.append(heading,close);
+        const intro=document.createElement('p');intro.className='cv-admin-intro';intro.textContent='Editá las experiencias, asociá cada logo y usá la barra de formato para resaltar detalles. Si falta un logo, cargalo antes en “Empresas”. Los datos personales de contacto del documento original no se muestran en la versión pública.';
+        const topfields=document.createElement('div');topfields.className='cv-admin-topfields';const titleField=document.createElement('label');titleField.className='cv-admin-field';titleField.textContent='Título del CV';const titleInput=document.createElement('input');titleInput.id='clientCvTitleInput';titleField.appendChild(titleInput);const introField=document.createElement('label');introField.className='cv-admin-field';introField.textContent='Introducción';const introInput=document.createElement('textarea');introInput.id='clientCvIntroInput';introInput.rows=2;introField.appendChild(introInput);topfields.append(titleField,introField);
+        clientCvList=document.createElement('div');clientCvList.className='cv-admin-list';clientCvList.id='clientCvAdminList';const add=document.createElement('button');add.type='button';add.className='btn secondary';add.textContent='Agregar experiencia';add.addEventListener('click',()=>{clientCvDraft=collectClientCv(true);clientCvDraft.items.push({company:'',solution:'PingERP',sector:'',location:'',logo:'',description:''});renderClientCvAdmin();clientCvList.lastElementChild?.scrollIntoView({block:'nearest'});clientCvList.lastElementChild?.querySelector('[data-cv-field="company"]')?.focus()});
+        const status=document.createElement('p');status.id='clientCvAdminStatus';status.className='status';status.setAttribute('aria-live','polite');const save=document.createElement('button');save.id='saveClientCv';save.className='btn';save.type='button';save.textContent='Guardar y publicar CV';const pdf=document.createElement('button');pdf.id='exportClientCv';pdf.className='btn secondary';pdf.type='button';pdf.textContent='Exportar PDF';const footer=document.createElement('footer');footer.className='cv-admin-footer';const note=document.createElement('span');note.className='cv-admin-note';note.textContent='La página pública y el PDF muestran los mismos datos.';const actions=document.createElement('div');actions.className='actions';actions.append(pdf,save);footer.append(note,actions);
+        panel.append(header,intro,topfields,clientCvList,add,status,footer);clientCvModal.appendChild(panel);document.body.appendChild(clientCvModal);
+        const closeModal=()=>{clientCvModal.hidden=true;document.body.classList.remove('cv-admin-open');launcher.focus()};launcher.addEventListener('click',()=>{clientCvModal.hidden=false;document.body.classList.add('cv-admin-open');close.focus()});close.addEventListener('click',closeModal);clientCvModal.addEventListener('click',event=>{if(event.target===clientCvModal)closeModal()});clientCvModal.addEventListener('keydown',event=>{if(event.key==='Escape')closeModal()});
+        pdf.addEventListener('click',()=>openClientCvPdf(collectClientCv(),readClientLogoOptions()));
+        save.addEventListener('click',async()=>{const {data:sessionData}=await supabase.auth.getSession();if(!authorized(sessionData.session)){showStatus(status,'Tu sesión de administrador venció. Volvé a ingresar.','error');return;}const cv=collectClientCv();if(!cv.title||!cv.items.length){showStatus(status,'El CV necesita un título y al menos una experiencia.','error');return;}save.disabled=true;showStatus(status,'Guardando CV…');const content={...current,clientCv:cv};const {error}=await supabase.from('site_content').update({content,updated_at:new Date().toISOString()}).eq('id',1);save.disabled=false;if(error){showStatus(status,`No se pudo guardar: ${error.message}`,'error');return;}current=content;clientCvDraft=JSON.parse(JSON.stringify(cv));showStatus(status,'CV guardado y publicado.','success')});
+      }
+      $('clientCvTitleInput').value=clientCvDraft.title||'';$('clientCvIntroInput').value=clientCvDraft.intro||'';renderClientCvAdmin();
+    }
     function showStatus(el,text,type=''){el.textContent=text;el.className=`status ${type}`.trim();}
     function authorized(session){return (session?.user?.email||'').toLowerCase()===ADMIN;}
     function showEditor(){login.classList.add('hidden');editor.classList.remove('hidden');}
@@ -119,7 +174,7 @@
       $('companyCasesEyebrow').value=current.extraText?.companyCasesEyebrow||'Soluciones del ecosistema PING';
       $('companyCasesTitle').value=current.extraText?.companyCasesTitle||'Soluciones digitales para cada operación.';
       $('companyCasesIntro').value=current.extraText?.companyCasesIntro||'Un ecosistema de soluciones para integrar la gestión y el trabajo diario en distintos sectores.';
-      refreshCompanyProfilePreviews();
+      refreshCompanyProfilePreviews();mountClientCvAdmin(current.clientCv);
 
       ['heroImage','heroChartImage','aboutImage','headerLogo','headerLogoDark','footerLogo','reportGraphImage'].forEach(id=>refreshImagePreview(id,`${id}Preview`));
     }
@@ -146,6 +201,7 @@
     enableSpaceSeparator('clients',1);
     enableSpaceSeparator('companyProfiles',3);
     $('companyProfiles').addEventListener('input',refreshCompanyProfilePreviews);
+    $('clients').addEventListener('input',()=>{if(clientCvList){clientCvDraft=collectClientCv(true);renderClientCvAdmin()}});
 
     async function loadEditor(){
       const {data,error}=await supabase.from('site_content').select('content').eq('id',1).single();
@@ -222,7 +278,7 @@
           const name=file.name.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').trim();
           lines.push(`${name} | ${data.publicUrl}`);
         }
-        $('clients').value=lines.join('\n');showStatus(uploadStatus,'Imágenes subidas. Revisá los nombres y luego guardá los cambios para publicarlos.','success');
+        $('clients').value=lines.join('\n');if(clientCvList){clientCvDraft=collectClientCv(true);renderClientCvAdmin()}showStatus(uploadStatus,'Imágenes subidas. Revisá los nombres y luego guardá los cambios para publicarlos.','success');
       }catch(error){showStatus(uploadStatus,`No se pudo subir: ${error.message}. Verificá que el bucket site-images y sus permisos estén configurados.`,'error');}
       finally{event.target.disabled=false;event.target.value='';}
     });
@@ -241,6 +297,7 @@
       });
       entries.forEach(item=>{if(!used.has(item.slug))merged.push(item.name+' | '+item.url)});
       $('clients').value=merged.join('\n');
+      if(clientCvList){clientCvDraft=collectClientCv(true);renderClientCvAdmin()}
       showStatus($('clientPackStatus'),'22 logos cargados. Se conservaron las demás empresas; revisá la lista y tocá “Guardar y publicar cambios”.','success');
     });
     $('contentForm').addEventListener('submit',async event=>{
@@ -261,6 +318,7 @@
       content.steps=parseRows('steps',2).map(([title,description])=>({title,description}));
       content.facts=parseRows('facts',2).map(([title,description])=>({title,description}));
       content.clients=clients;
+      content.clientCv=collectClientCv();
       content.companyProfiles=parseRows('companyProfiles',4).map(([name,sector,description,image])=>({name,sector,description,image:image||''}));
       content.extraText.companyCasesEyebrow=$('companyCasesEyebrow').value.trim();
       content.extraText.companyCasesTitle=$('companyCasesTitle').value.trim();

@@ -1,4 +1,5 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { DEFAULT_CLIENT_CV, findClientLogo, openClientCvPdf, sanitizeRichHtml } from './client-cv.js?v=client-cv-20261026';
 
 const SUPABASE_URL = 'https://jeonzbisrwukbpvydcyh.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_c4VeVqtYXYGMtzTBoBfiKg_gCf_vut-';
@@ -142,6 +143,78 @@ function renderCompanyProfiles(profiles) {
   } else grid.querySelectorAll('.reveal').forEach(card => card.classList.add('visible'));
 }
 
+function renderClientCv(cv, clients = []) {
+  const section = document.querySelector('.clients');
+  const gallery = section?.querySelector('.client-gallery');
+  if (!section || !gallery) return;
+  let button = gallery.querySelector('.client-cv-open');
+  let modal = section.querySelector('#clientCvModal');
+  if (!button || !modal) {
+    button = document.createElement('button'); button.type = 'button';
+    button.className = 'clients-view-all client-cv-open'; button.textContent = 'Experiencias PingERP';
+    button.setAttribute('aria-expanded', 'false'); button.setAttribute('aria-controls', 'clientCvModal');
+    modal = document.createElement('div'); modal.className = 'client-modal client-cv-modal'; modal.id = 'clientCvModal';
+    modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'clientCvTitle'); modal.hidden = true;
+    const panel = document.createElement('div'); panel.className = 'client-modal-panel client-cv-panel';
+    const header = document.createElement('div'); header.className = 'client-modal-header client-cv-header';
+    const headingWrap = document.createElement('div');
+    const title = document.createElement('h2'); title.id = 'clientCvTitle';
+    const intro = document.createElement('p'); intro.className = 'client-cv-intro';
+    headingWrap.append(title, intro);
+    const headerActions = document.createElement('div'); headerActions.className = 'client-cv-actions';
+    const exportButton = document.createElement('button'); exportButton.type = 'button';
+    exportButton.className = 'client-cv-export'; exportButton.textContent = 'Exportar PDF';
+    const close = document.createElement('button'); close.className = 'client-modal-close'; close.type = 'button';
+    close.setAttribute('aria-label', 'Cerrar experiencias'); close.textContent = '×';
+    headerActions.append(exportButton, close); header.append(headingWrap, headerActions);
+    const list = document.createElement('div'); list.className = 'client-cv-list'; list.id = 'clientCvList';
+    const closeModal = () => { modal.hidden = true; button.setAttribute('aria-expanded', 'false'); document.body.classList.remove('client-modal-open'); button.focus(); };
+    button.addEventListener('click', () => { modal.hidden = false; button.setAttribute('aria-expanded', 'true'); document.body.classList.add('client-modal-open'); close.focus(); });
+    close.addEventListener('click', closeModal);
+    modal.addEventListener('click', event => { if (event.target === modal) closeModal(); });
+    modal.addEventListener('keydown', event => { if (event.key === 'Escape') closeModal(); });
+    panel.append(header, list); modal.appendChild(panel); gallery.append(button); section.appendChild(modal);
+  }
+  const data = cv && Array.isArray(cv.items) ? cv : DEFAULT_CLIENT_CV;
+  modal.querySelector('#clientCvTitle').textContent = data.title || DEFAULT_CLIENT_CV.title;
+  modal.querySelector('.client-cv-intro').textContent = data.intro || '';
+  const list = modal.querySelector('#clientCvList');
+  list.replaceChildren(...data.items.filter(item => item && item.company).map(item => {
+    const card = document.createElement('article'); card.className = 'client-cv-card';
+    const logoFrame = document.createElement('div'); logoFrame.className = 'client-cv-logo';
+    const logo = findClientLogo(item, clients);
+    if (logo) { const img = document.createElement('img'); img.src = logo; img.alt = `Logo de ${item.company}`; img.loading = 'lazy'; img.decoding = 'async'; logoFrame.appendChild(img); }
+    else { const fallback = document.createElement('span'); fallback.textContent = item.company.trim().slice(0, 2).toUpperCase(); fallback.setAttribute('aria-hidden', 'true'); logoFrame.appendChild(fallback); }
+    const content = document.createElement('div'); content.className = 'client-cv-content';
+    const company = document.createElement('h3'); company.textContent = item.company;
+    const solution = document.createElement('span'); solution.className = 'client-cv-solution'; solution.textContent = item.solution || 'PingERP';
+    content.append(company, solution);
+    [['Rubro', item.sector], ['Ubicación', item.location]].forEach(([label, value]) => {
+      if (!value) return;
+      const line = document.createElement('p'); line.className = 'client-cv-fact';
+      const strong = document.createElement('strong'); strong.textContent = `${label}: `;
+      line.append(strong, document.createTextNode(value)); content.appendChild(line);
+    });
+    if (item.description) { const description = document.createElement('div'); description.className = 'client-cv-description'; description.innerHTML = sanitizeRichHtml(item.description); content.appendChild(description); }
+    card.append(logoFrame, content); return card;
+  }));
+  modal.querySelector('.client-cv-export').onclick = () => openClientCvPdf(data, clients);
+}
+
+function exportClientCv(cv, clients) {
+  const data = cv && Array.isArray(cv.items) ? cv : DEFAULT_CLIENT_CV;
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) { window.alert('Permití las ventanas emergentes para exportar el PDF.'); return; }
+  const escape = value => String(value || '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const rows = data.items.filter(item => item && item.company).map(item => {
+    const logo = findClientLogo(item, clients);
+    return `<article class="card">${logo ? `<img src="${escape(logo)}" alt="Logo de ${escape(item.company)}">` : ''}<div><h2>${escape(item.company)}</h2><span class="pill">${escape(item.solution || 'PingERP')}</span>${item.sector ? `<p><b>Rubro:</b> ${escape(item.sector)}</p>` : ''}${item.location ? `<p><b>Ubicación:</b> ${escape(item.location)}</p>` : ''}${item.description ? `<div>${sanitizeRichHtml(item.description)}</div>` : ''}</div></article>`;
+  }).join('');
+  printWindow.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(data.title)}</title><base href="${escape(location.origin)}/"><style>@page{size:A4;margin:15mm}*{box-sizing:border-box}body{font:14px/1.5 Arial,sans-serif;color:#202124;margin:0}header{margin-bottom:24px}header p{color:#555}h1{font-size:28px;line-height:1.2;margin:0 0 8px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{break-inside:avoid;display:grid;grid-template-columns:92px 1fr;gap:14px;align-items:start;padding:14px;border:1px solid #dedede;border-radius:12px;margin:0 0 12px}.card img{width:88px;height:76px;object-fit:contain}.card h2{font-size:17px;margin:0 0 5px}.pill{display:inline-block;margin-bottom:5px;padding:3px 9px;border-radius:20px;background:#edf2f1;font-size:11px;font-weight:bold}.card p{font-size:12px;margin:4px 0;color:#444}.card b{color:#222}.card ul,.card ol{padding-left:18px}.card p,.card li{orphans:3;widows:3}@media print{.card{box-shadow:none}}</style></head><body><header><h1>${escape(data.title)}</h1><p>${escape(data.intro)}</p></header><main class="grid">${rows}</main><script>window.addEventListener('load',()=>{Promise.all([...document.images].map(image=>image.decode?.().catch(()=>{})||Promise.resolve())).then(()=>setTimeout(()=>window.print(),250))});<\/script></body></html>`);
+  printWindow.document.close();
+}
+
 function solutionImageUrl(url) {
   if (typeof url !== 'string' || !url.startsWith('/assets/solutions/')) return url;
   const imageUrl = new URL(url, location.origin);
@@ -243,7 +316,7 @@ function applyContent(content) {
   setCustomImage('.chart', content.heroChartImage);
   setCustomImage('.aboutvisual', content.aboutImage);
   setCustomImage('.report-graph', content.reportGraphImage);
-  renderClients(content.clients); renderCompanyProfiles(content.companyProfiles);
+  renderClients(content.clients); renderCompanyProfiles(content.companyProfiles); renderClientCv(content.clientCv, content.clients || []);
 }
 
 function setTextFor(root, selector, value) { const el=root.querySelector(selector);if(el&&value)el.textContent=value; }
