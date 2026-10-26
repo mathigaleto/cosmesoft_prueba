@@ -27,45 +27,69 @@ function renderClients(clients) {
   const valid = clients.filter(client => client && client.name && client.logo && /^https:\/\//i.test(client.logo)).sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
   if (!valid.length) { track.replaceChildren(); if (section) section.hidden = true; return; }
   if (section) section.hidden = false;
+  const makeCard = client => {
+    const figure = document.createElement('figure'); figure.className = 'client-logo';
+    const logoName = client.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    if (logoName.includes('organizacion de los estados') || logoName.startsWith('oea')) figure.classList.add('client-logo--oea');
+    if (logoName === 'cosmesoft') figure.classList.add('client-logo--cosmesoft');
+    if (logoName.includes('ruta 10')) figure.classList.add('client-logo--ruta');
+    if (logoName === 'shell') figure.classList.add('client-logo--shell');
+    const img = document.createElement('img');
+    // Older Supabase content still points to this project's former GitHub Pages
+    // hostname. Rebase those bundled client assets to the site currently serving
+    // the page, so the same committed logos work on the Linux deployment too.
+    let logoUrl = client.logo;
+    try {
+      const parsedLogo = new URL(client.logo);
+      const oldRepoPrefix = '/cosmesoft_prueba/assets/clients/';
+      if (parsedLogo.hostname === 'mathigaleto.github.io' && parsedLogo.pathname.startsWith(oldRepoPrefix)) {
+        logoUrl = `${location.origin}/assets/clients/${parsedLogo.pathname.slice(oldRepoPrefix.length)}${parsedLogo.search}`;
+      }
+    } catch {}
+    img.src = logoUrl; img.alt = `Logo de ${client.name}`; img.loading = 'lazy'; img.decoding = 'async';
+    img.addEventListener('error', () => {
+      if (logoUrl !== client.logo) return;
+      try {
+        const parsedLogo = new URL(client.logo);
+        if (parsedLogo.hostname === 'mathigaleto.github.io' && parsedLogo.pathname.startsWith('/cosmesoft_prueba/assets/clients/')) {
+          img.src = `${location.origin}/assets/clients/${parsedLogo.pathname.split('/').pop()}${parsedLogo.search}`;
+        }
+      } catch {}
+    }, { once: true });
+    const caption = document.createElement('figcaption'); caption.textContent = client.name;
+    figure.append(img, caption);
+    return figure;
+  };
   const makeGroup = hidden => {
     const group = document.createElement('div');
     group.className = 'client-group';
     if (hidden) group.setAttribute('aria-hidden', 'true');
-    valid.forEach(client => {
-      const figure = document.createElement('figure'); figure.className = 'client-logo';
-      const logoName = client.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-      if (logoName.includes('organizacion de los estados') || logoName.startsWith('oea')) figure.classList.add('client-logo--oea');
-      if (logoName === 'cosmesoft') figure.classList.add('client-logo--cosmesoft');
-      if (logoName.includes('ruta 10')) figure.classList.add('client-logo--ruta');
-      if (logoName === 'shell') figure.classList.add('client-logo--shell');
-      const img = document.createElement('img');
-      // Older Supabase content still points to this project's former GitHub Pages
-      // hostname. Rebase those bundled client assets to the site currently serving
-      // the page, so the same committed logos work on the Linux deployment too.
-      let logoUrl = client.logo;
-      try {
-        const parsedLogo = new URL(client.logo);
-        const oldRepoPrefix = '/cosmesoft_prueba/assets/clients/';
-        if (parsedLogo.hostname === 'mathigaleto.github.io' && parsedLogo.pathname.startsWith(oldRepoPrefix)) {
-          logoUrl = `${location.origin}/assets/clients/${parsedLogo.pathname.slice(oldRepoPrefix.length)}${parsedLogo.search}`;
-        }
-      } catch {}
-      img.src = logoUrl; img.alt = `Logo de ${client.name}`; img.loading = 'lazy'; img.decoding = 'async';
-      img.addEventListener('error', () => {
-        if (logoUrl !== client.logo) return;
-        try {
-          const parsedLogo = new URL(client.logo);
-          if (parsedLogo.hostname === 'mathigaleto.github.io' && parsedLogo.pathname.startsWith('/cosmesoft_prueba/assets/clients/')) {
-            img.src = `${location.origin}/assets/clients/${parsedLogo.pathname.split('/').pop()}${parsedLogo.search}`;
-          }
-        } catch {}
-      }, { once: true });
-      const caption = document.createElement('figcaption'); caption.textContent = client.name;
-      figure.append(img, caption); group.appendChild(figure);
-    });
+    valid.forEach(client => group.appendChild(makeCard(client)));
     return group;
   };
   track.replaceChildren(makeGroup(false), makeGroup(true));
+  const marquee = track.closest('.client-marquee');
+  let gallery = section?.querySelector('.client-gallery');
+  if (marquee && section) {
+    if (!gallery) {
+      gallery = document.createElement('div'); gallery.className = 'client-gallery';
+      const button = document.createElement('button');
+      button.className = 'clients-view-all'; button.type = 'button';
+      button.setAttribute('aria-expanded', 'false'); button.setAttribute('aria-controls', 'clientGrid');
+      button.textContent = 'Ver todos';
+      const grid = document.createElement('div'); grid.className = 'client-grid'; grid.id = 'clientGrid';
+      grid.setAttribute('aria-label', 'Todos los logos de empresas'); grid.hidden = true;
+      button.addEventListener('click', () => {
+        const expanded = button.getAttribute('aria-expanded') !== 'true';
+        button.setAttribute('aria-expanded', String(expanded));
+        button.textContent = expanded ? 'Ver menos' : 'Ver todos';
+        grid.hidden = !expanded;
+      });
+      gallery.append(button, grid);
+      marquee.insertAdjacentElement('afterend', gallery);
+    }
+    gallery.querySelector('.client-grid')?.replaceChildren(...valid.map(makeCard));
+  }
   window.dispatchEvent(new Event('cosmesoft:clients-updated'));
 }
 
