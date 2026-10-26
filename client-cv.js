@@ -84,18 +84,35 @@ export async function openClientCvPdf(cv, clients = []) {
   try {
     const html2pdf = await loadPdfLibrary();
     await Promise.all([...host.querySelectorAll('img')].map(image => image.decode?.().catch(() => {}) || Promise.resolve()));
-    await html2pdf().set({
+    const pdfBlob = await html2pdf().set({
       margin: [12, 12, 12, 12],
-      filename: 'Experiencias-PingERP.pdf',
       image: {type: 'jpeg', quality: 0.98},
       html2canvas: {scale: 2, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0},
       jsPDF: {unit: 'mm', format: 'a4', orientation: 'portrait', compress: true},
       pagebreak: {mode: ['css', 'legacy'], avoid: '.cv-pdf-card'}
-    }).from(host).save();
+    }).from(host).outputPdf('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    overlay.replaceChildren();
+    const panel = document.createElement('section');
+    panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-modal', 'true');
+    panel.style.cssText = 'width:min(92vw,460px);padding:28px;border:1px solid #ddd;border-radius:16px;background:#fff;box-shadow:0 12px 48px #0003;text-align:center';
+    const ready = document.createElement('h2'); ready.textContent = 'El PDF está listo'; ready.style.cssText = 'margin:0 0 8px;font-size:22px';
+    const note = document.createElement('p'); note.textContent = 'Si no se descargó automáticamente, elegí “Descargar PDF”.'; note.style.cssText = 'margin:0 0 20px;font-weight:400;color:#555';
+    const actions = document.createElement('div'); actions.style.cssText = 'display:flex;justify-content:center;flex-wrap:wrap;gap:10px';
+    const download = document.createElement('a'); download.href = pdfUrl; download.download = 'Experiencias-PingERP.pdf'; download.textContent = 'Descargar PDF';
+    download.style.cssText = 'padding:11px 18px;border-radius:24px;background:#171717;color:#fff;text-decoration:none;font-weight:700';
+    const open = document.createElement('a'); open.href = pdfUrl; open.target = '_blank'; open.rel = 'noopener'; open.textContent = 'Abrir PDF';
+    open.style.cssText = 'padding:11px 18px;border:1px solid #ccc;border-radius:24px;color:#171717;text-decoration:none;font-weight:700';
+    const close = document.createElement('button'); close.type = 'button'; close.textContent = 'Cerrar'; close.style.cssText = 'margin-top:18px;padding:8px 14px;border:0;background:transparent;color:#555;text-decoration:underline;cursor:pointer';
+    close.addEventListener('click', () => { URL.revokeObjectURL(pdfUrl); overlay.remove(); });
+    actions.append(download, open); panel.append(ready, note, actions, close); overlay.appendChild(panel);
+    download.click();
   } catch (error) {
     console.error('No se pudo descargar el CV en PDF', error);
-    window.alert('No se pudo descargar el PDF. Revisá tu conexión e intentá de nuevo.');
+    overlay.textContent = 'No se pudo crear el PDF. Recargá el admin e intentá otra vez.';
+    const close = document.createElement('button'); close.type = 'button'; close.textContent = 'Cerrar'; close.addEventListener('click', () => overlay.remove());
+    overlay.appendChild(close);
   } finally {
-    overlay.remove(); host.remove();
+    host.remove();
   }
 }
