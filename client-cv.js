@@ -1,28 +1,3 @@
-export const DEFAULT_CLIENT_CV = {
-  title: 'Experiencias en implementación de PingERP',
-  intro: 'Proyectos implementados para organizaciones de distintos sectores en Paraguay.',
-  items: [
-    { company: 'Sociedad Salesiana del Paraguay', logoClient: 'Salesianos Paraguay', solution: 'Módulos académico · ERP', sector: 'Educación y formación juvenil', location: 'Presencia en todo Paraguay', description: '' },
-    { company: 'Shell Paraguay (Raízen S.A.)', logoClient: 'Shell', solution: 'Plataforma académica', sector: 'Estaciones de servicios', location: 'Presencia en todo Paraguay', description: '' },
-    { company: 'Grupo del Sur (Miaterra)', logoClient: 'Grupo Miaterra', solution: 'Módulos inmobiliaria · ERP', sector: 'Desarrollos inmobiliarios', location: 'Asunción, Paraguay', description: '' },
-    { company: 'Multienvios S.A.', logoClient: 'Multi Envíos Sociedad Anónima', solution: 'PingERP', sector: 'Transporte y logística de encomiendas', location: 'Asunción, Paraguay', description: '' },
-    { company: 'Grupo Matiz (Matiz S.A.E.)', logoClient: 'Matiz S.A.E.', solution: 'PingERP', sector: 'Importaciones', location: 'Asunción, Paraguay', description: '' },
-    { company: 'GS Concretos S.A.', logoClient: 'GS Concretos', solution: 'PingERP', sector: 'Producción y suministro de hormigón', location: 'Luque, Paraguay', description: '' },
-    { company: 'Jaraha Encomiendas', logoClient: 'Jaraha Encomiendas', solution: 'PingERP', sector: 'Logística y envíos', location: 'Ciudad del Este, Paraguay', description: '' },
-    { company: 'Monitor Soft', logoClient: 'Monitor', solution: 'PingERP', sector: 'Soluciones de logística y monitoreo satelital', location: 'Fernando de la Mora, Paraguay', description: '' },
-    { company: 'Filtrona · Paraguay', logoClient: 'Filtrona', solution: 'PingERP', sector: 'Fábrica e importadora', location: 'Ciudad del Este, Paraguay', description: '' },
-    { company: 'Alsetec · Paraguay', logoClient: 'Alsetec', solution: 'PingERP', sector: 'Almacenamiento y logística', location: '', description: '' },
-    { company: 'Consorcio TYC S.A.', logoClient: 'T&C', solution: 'PingERP', sector: 'Obras viales y civiles', location: 'Asunción, Paraguay', description: '' },
-    { company: 'Fundación Saraki', logoClient: 'Fundación Saraki', solution: 'PingERP', sector: 'ONG · gestión administrativa y financiera', location: 'Asunción, Paraguay', description: '' },
-    { company: 'CeConsult', logoClient: 'CeConsult', solution: 'PingERP', sector: 'Recursos humanos', location: 'Asunción, Paraguay', description: '' },
-    { company: 'Hard & Soft S.A.', logoClient: 'Hard & Soft S.A.', solution: 'PingERP', sector: 'Fabricación y adaptación de vehículos especiales y de emergencia', location: 'Asunción, Paraguay', description: '' },
-    { company: 'ReinoFrío Paraguay S.A.', logoClient: 'Reino Frío', solution: 'PingERP', sector: 'Transporte y logística internacional', location: 'Asunción, Paraguay', description: '' },
-    { company: 'W7 Encomiendas', logoClient: '', solution: 'PingERP', sector: 'Transporte de cargas y paquetería', location: 'Ciudad del Este, Paraguay', description: '' },
-    { company: 'Ingenio Azucarero La Felsina', logoClient: 'Ingenio Azucarero La Felsina A.C.S.A.', solution: 'PingERP', sector: 'Agroindustria', location: 'Guarambaré, Paraguay', description: '' },
-    { company: 'Occidental Express', logoClient: 'Occidental Express', solution: 'PingERP', sector: 'Transporte de cargas y paquetería', location: 'Asunción, Paraguay', description: '' }
-  ]
-};
-
 const RICH_TAGS = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'BR', 'P', 'UL', 'OL', 'LI']);
 
 export function sanitizeRichHtml(value = '') {
@@ -61,7 +36,7 @@ export function findClientLogo(item, clients = []) {
 }
 
 export function openClientCvPdf(cv, clients = []) {
-  const data = cv && Array.isArray(cv.items) ? cv : DEFAULT_CLIENT_CV;
+  const data = cv && Array.isArray(cv.items) ? cv : {title: 'Experiencias en implementación de PingERP', intro: '', items: []};
   const printWindow = window.open('', '_blank');
   if (!printWindow) { window.alert('Permití las ventanas emergentes para exportar el PDF.'); return; }
   const escape = value => String(value || '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
