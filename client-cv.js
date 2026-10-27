@@ -150,8 +150,8 @@ export async function openClientCvPdf(cv, clients = []) {
       pdf.addImage(canvas.toDataURL('image/png'), 'PNG', x, y, imageWidthMm, imageHeightMm);
       // Draw each company frame as PDF vector after the page image. Canvas rasterization
       // can drop thin horizontal strokes at page/viewport boundaries in some browsers.
-      pdf.setDrawColor(156, 174, 194);
-      pdf.setLineWidth(0.35);
+      pdf.setDrawColor(25, 25, 25);
+      pdf.setLineWidth(0.45);
       for (const frame of cardFrames) {
         const inset = 0.35;
         pdf.roundedRect(
