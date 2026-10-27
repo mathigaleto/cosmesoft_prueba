@@ -135,13 +135,35 @@ export async function openClientCvPdf(cv, clients = []) {
       const pageGrid = document.createElement('main'); pageGrid.className = 'cv-pdf-grid';
       pageGrid.append(...group.cards); page.appendChild(pageGrid); host.appendChild(page);
       const pageHeight = page.scrollHeight;
+      const pageRect = page.getBoundingClientRect();
+      const cardFrames = group.cards.map(card => {
+        const rect = card.getBoundingClientRect();
+        return {x: rect.left - pageRect.left, y: rect.top - pageRect.top, width: rect.width, height: rect.height};
+      });
       const canvas = await html2canvas(page, {scale: 3, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0, x: 0, y: 0, width: 703, height: pageHeight, windowWidth: 703, windowHeight: Math.max(window.innerHeight, pageHeight)});
       if (index > 0) pdf.addPage('a4', 'portrait');
       const pageWidthMm = 186, maxHeightMm = 273;
       let imageHeightMm = canvas.height / canvas.width * pageWidthMm, imageWidthMm = pageWidthMm;
       if (imageHeightMm > maxHeightMm) { const fit = maxHeightMm / imageHeightMm; imageHeightMm = maxHeightMm; imageWidthMm *= fit; }
       const x = (210 - imageWidthMm) / 2;
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', x, 12, imageWidthMm, imageHeightMm);
+      const y = 12, scale = imageWidthMm / 703;
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', x, y, imageWidthMm, imageHeightMm);
+      // Draw each company frame as PDF vector after the page image. Canvas rasterization
+      // can drop thin horizontal strokes at page/viewport boundaries in some browsers.
+      pdf.setDrawColor(156, 174, 194);
+      pdf.setLineWidth(0.35);
+      for (const frame of cardFrames) {
+        const inset = 0.35;
+        pdf.roundedRect(
+          x + frame.x * scale + inset,
+          y + frame.y * scale + inset,
+          frame.width * scale - inset * 2,
+          frame.height * scale - inset * 2,
+          3.7,
+          3.7,
+          'S'
+        );
+      }
       page.remove(); canvas.width = 0; canvas.height = 0;
     }
     const pdfBlob = pdf.output('blob');
