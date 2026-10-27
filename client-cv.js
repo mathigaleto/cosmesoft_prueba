@@ -53,6 +53,10 @@ function loadPdfLibrary() {
 
 export async function openClientCvPdf(cv, clients = []) {
   const data = cv && Array.isArray(cv.items) ? cv : {title: 'Experiencias en implementación de PingERP', intro: '', items: []};
+  if (!data.items.some(entry => entry && String(entry.company || '').trim())) {
+    window.alert('No hay experiencias cargadas para exportar. Esperá a que termine la carga del CV e intentá de nuevo.');
+    return;
+  }
   const adminModalWasOpen = document.body.classList.contains('cv-admin-open');
   if (adminModalWasOpen) document.body.classList.remove('cv-admin-open');
   const host = document.createElement('div');
