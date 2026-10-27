@@ -40,13 +40,19 @@ export function findClientLogo(item, clients = []) {
 let pdfLibraryPromise;
 
 function loadPdfLibrary() {
-  if (window.html2pdf) return Promise.resolve(window.html2pdf);
-  if (!pdfLibraryPromise) pdfLibraryPromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js';
-    script.onload = () => window.html2pdf ? resolve(window.html2pdf) : reject(new Error('No se pudo iniciar el generador PDF.'));
-    script.onerror = () => reject(new Error('No se pudo cargar el generador PDF.'));
-    document.head.appendChild(script);
+  if (window.html2canvas && window.jspdf?.jsPDF) return Promise.resolve({html2canvas: window.html2canvas, jsPDF: window.jspdf.jsPDF});
+  if (!pdfLibraryPromise) pdfLibraryPromise = Promise.all([
+    window.html2canvas ? Promise.resolve() : new Promise((resolve, reject) => {
+      const script = document.createElement('script'); script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      script.onload = resolve; script.onerror = () => reject(new Error('No se pudo cargar el renderizador de páginas.')); document.head.appendChild(script);
+    }),
+    window.jspdf?.jsPDF ? Promise.resolve() : new Promise((resolve, reject) => {
+      const script = document.createElement('script'); script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      script.onload = resolve; script.onerror = () => reject(new Error('No se pudo cargar el generador de PDF.')); document.head.appendChild(script);
+    })
+  ]).then(() => {
+    if (!window.html2canvas || !window.jspdf?.jsPDF) throw new Error('No se pudieron iniciar las herramientas del PDF.');
+    return {html2canvas: window.html2canvas, jsPDF: window.jspdf.jsPDF};
   });
   return pdfLibraryPromise;
 }
@@ -69,6 +75,7 @@ export async function openClientCvPdf(cv, clients = []) {
     .cv-pdf-title{font-size:28px;line-height:1.2;margin:0 0 8px;color:#171b22}
     .cv-pdf-intro{margin:0 0 22px;color:#59616b}
     .cv-pdf-grid{display:block}
+    .cv-pdf-page{width:703px;background:#fff;color:#202124;font:14px/1.5 Arial,sans-serif}
     .cv-pdf-card{break-inside:avoid;page-break-inside:avoid;display:grid;grid-template-columns:136px minmax(0,1fr);gap:18px;align-items:center;margin:0 0 14px;padding:16px;border:1.25px solid #b9c4d1;border-radius:14px;background:#fff;box-shadow:0 2px 7px rgba(25,35,50,.07)}
     .cv-pdf-logo{width:124px;height:100px;display:flex;align-items:center;justify-content:center;padding:8px;border:1.25px solid #c4ceda;border-radius:11px;background:#f9fafb}
     .cv-pdf-logo img{display:block;width:auto!important;height:auto!important;max-width:106px!important;max-height:82px!important;object-fit:contain}
@@ -105,15 +112,39 @@ export async function openClientCvPdf(cv, clients = []) {
   }
   host.append(style, title, intro, grid); document.body.append(host, overlay);
   try {
-    const html2pdf = await loadPdfLibrary();
+    const {html2canvas, jsPDF} = await loadPdfLibrary();
+    await document.fonts?.ready;
     await Promise.all([...host.querySelectorAll('img')].map(image => image.decode?.().catch(() => {}) || Promise.resolve()));
-    const pdfBlob = await html2pdf().set({
-      margin: [12, 12, 12, 12],
-      image: {type: 'png'},
-      html2canvas: {scale: 3, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0},
-      jsPDF: {unit: 'mm', format: 'a4', orientation: 'portrait', compress: true},
-      pagebreak: {mode: ['avoid-all', 'css'], avoid: '.cv-pdf-card'}
-    }).from(host).outputPdf('blob');
+    const pageLimit = 273 / 186 * 703;
+    const titleStyle = getComputedStyle(title), introStyle = getComputedStyle(intro);
+    const headerHeight = title.getBoundingClientRect().height + parseFloat(titleStyle.marginBottom || 0) + intro.getBoundingClientRect().height + parseFloat(introStyle.marginBottom || 0);
+    const groups = [{cards: [], used: headerHeight, header: true}];
+    for (const card of [...grid.querySelectorAll('.cv-pdf-card')]) {
+      const cardStyle = getComputedStyle(card);
+      const height = card.getBoundingClientRect().height + parseFloat(cardStyle.marginBottom || 0);
+      let group = groups[groups.length - 1];
+      if (group.cards.length && group.used + height > pageLimit) { group = {cards: [], used: 0, header: false}; groups.push(group); }
+      group.cards.push(card); group.used += height;
+    }
+    const pdf = new jsPDF({unit: 'mm', format: 'a4', orientation: 'portrait', compress: true});
+    pdf.setProperties({title: data.title || 'Experiencias en implementación de PingERP'});
+    for (const [index, group] of groups.entries()) {
+      const page = document.createElement('section'); page.className = 'cv-pdf-page';
+      page.style.cssText = 'position:fixed;left:0;top:0;width:703px;z-index:0;background:#fff';
+      if (group.header) page.append(title, intro);
+      const pageGrid = document.createElement('main'); pageGrid.className = 'cv-pdf-grid';
+      pageGrid.append(...group.cards); page.appendChild(pageGrid); host.appendChild(page);
+      const pageHeight = page.scrollHeight;
+      const canvas = await html2canvas(page, {scale: 3, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0, x: 0, y: 0, width: 703, height: pageHeight, windowWidth: 703, windowHeight: Math.max(window.innerHeight, pageHeight)});
+      if (index > 0) pdf.addPage('a4', 'portrait');
+      const pageWidthMm = 186, maxHeightMm = 273;
+      let imageHeightMm = canvas.height / canvas.width * pageWidthMm, imageWidthMm = pageWidthMm;
+      if (imageHeightMm > maxHeightMm) { const fit = maxHeightMm / imageHeightMm; imageHeightMm = maxHeightMm; imageWidthMm *= fit; }
+      const x = (210 - imageWidthMm) / 2;
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', x, 12, imageWidthMm, imageHeightMm);
+      page.remove(); canvas.width = 0; canvas.height = 0;
+    }
+    const pdfBlob = pdf.output('blob');
     const pdfUrl = URL.createObjectURL(pdfBlob);
     overlay.replaceChildren();
     const ready = document.createElement('span'); ready.textContent = 'PDF listo';
