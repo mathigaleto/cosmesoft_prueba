@@ -76,7 +76,7 @@ export async function openClientCvPdf(cv, clients = []) {
     .cv-pdf-intro{margin:0 0 22px;color:#59616b}
     .cv-pdf-grid{display:block}
     .cv-pdf-page{width:703px;background:#fff;color:#202124;font:14px/1.5 Arial,sans-serif}
-    .cv-pdf-card{break-inside:avoid;page-break-inside:avoid;display:grid;grid-template-columns:136px minmax(0,1fr);gap:18px;align-items:center;margin:0 0 14px;padding:16px;border:1.25px solid #b9c4d1;border-radius:14px;background:#fff;box-shadow:0 2px 7px rgba(25,35,50,.07)}
+    .cv-pdf-card{break-inside:avoid;page-break-inside:avoid;display:grid;grid-template-columns:136px minmax(0,1fr);gap:18px;align-items:center;margin:0 0 14px;padding:16px;border:1.25px solid transparent;border-radius:14px;background:#fff;box-shadow:none}
     .cv-pdf-logo{width:124px;height:100px;display:flex;align-items:center;justify-content:center;padding:8px;border:1.25px solid #c4ceda;border-radius:11px;background:#f9fafb}
     .cv-pdf-logo img{display:block;width:auto!important;height:auto!important;max-width:106px!important;max-height:82px!important;object-fit:contain}
     .cv-pdf-card h2{font-size:18px;line-height:1.3;margin:0 0 6px;color:#171b22}
