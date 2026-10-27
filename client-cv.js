@@ -68,7 +68,7 @@ export async function openClientCvPdf(cv, clients = []) {
   const host = document.createElement('div');
   host.setAttribute('aria-hidden', 'true');
   host.dataset.cvPdfRender = 'true';
-  host.style.cssText = 'position:relative;left:auto;top:auto;width:703px;padding:0;margin:0 auto;background:#fff;color:#202124;font:14px/1.5 Arial,sans-serif;box-sizing:border-box';
+  host.style.cssText = 'position:fixed;left:0;top:0;width:703px;padding:0;margin:0;background:#fff;color:#202124;font:14px/1.5 Arial,sans-serif;box-sizing:border-box;pointer-events:none;opacity:0;z-index:-1';
   const style = document.createElement('style');
   style.textContent = `
     *{box-sizing:border-box}
@@ -130,7 +130,7 @@ export async function openClientCvPdf(cv, clients = []) {
     pdf.setProperties({title: data.title || 'Experiencias en implementación de PingERP'});
     for (const [index, group] of groups.entries()) {
       const page = document.createElement('section'); page.className = 'cv-pdf-page';
-      page.style.cssText = 'position:fixed;left:0;top:0;width:703px;z-index:0;background:#fff';
+      page.style.cssText = 'position:relative;left:auto;top:auto;width:703px;z-index:auto;background:#fff';
       if (group.header) page.append(title, intro);
       const pageGrid = document.createElement('main'); pageGrid.className = 'cv-pdf-grid';
       pageGrid.append(...group.cards); page.appendChild(pageGrid); host.appendChild(page);
@@ -140,7 +140,7 @@ export async function openClientCvPdf(cv, clients = []) {
         const rect = card.getBoundingClientRect();
         return {x: rect.left - pageRect.left, y: rect.top - pageRect.top, width: rect.width, height: rect.height};
       });
-      const canvas = await html2canvas(page, {scale: 3, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0, x: 0, y: 0, width: 703, height: pageHeight, windowWidth: 703, windowHeight: Math.max(window.innerHeight, pageHeight)});
+      const canvas = await html2canvas(page, {scale: 3, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0, x: pageRect.left, y: pageRect.top, width: 703, height: pageHeight, windowWidth: 703, windowHeight: Math.max(window.innerHeight, pageHeight), onclone: clonedDocument => { const renderHost = clonedDocument.querySelector('[data-cv-pdf-render]'); if (renderHost) { renderHost.style.opacity = '1'; renderHost.style.zIndex = '1'; } }});
       if (index > 0) pdf.addPage('a4', 'portrait');
       const pageWidthMm = 186, maxHeightMm = 273;
       let imageHeightMm = canvas.height / canvas.width * pageWidthMm, imageWidthMm = pageWidthMm;
@@ -171,14 +171,16 @@ export async function openClientCvPdf(cv, clients = []) {
     overlay.replaceChildren();
     const ready = document.createElement('span'); ready.textContent = 'PDF listo';
     const download = document.createElement('a'); download.href = pdfUrl; download.download = 'Experiencias-PingERP.pdf'; download.textContent = 'Descargar';
-    download.style.cssText = 'color:#fff;font-weight:700;text-underline-offset:3px';
+    download.style.cssText = 'display:inline-flex;align-items:center;min-height:38px;padding:0 10px;border-radius:8px;background:#fff;color:#171717;font-weight:700;text-decoration:none;white-space:nowrap';
     const open = document.createElement('a'); open.href = pdfUrl; open.target = '_blank'; open.rel = 'noopener'; open.textContent = 'Abrir';
-    open.style.cssText = 'color:#fff;font-weight:700;text-underline-offset:3px';
+    open.style.cssText = 'color:#fff;font-weight:700;text-underline-offset:3px;white-space:nowrap';
     const close = document.createElement('button'); close.type = 'button'; close.textContent = '×'; close.setAttribute('aria-label', 'Cerrar'); close.style.cssText = 'border:0;background:transparent;color:#fff;font-size:21px;line-height:1;cursor:pointer;padding:0 2px';
     close.addEventListener('click', () => { URL.revokeObjectURL(pdfUrl); overlay.remove(); });
     overlay.append(ready, download, open, close);
-    download.click();
-    window.setTimeout(() => { if (overlay.isConnected) { URL.revokeObjectURL(pdfUrl); overlay.remove(); } }, 20000);
+    const mobileDownload = window.matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (mobileDownload) { ready.textContent = 'PDF listo. Tocá Guardar PDF para descargarlo.'; download.textContent = 'Guardar PDF'; }
+    else download.click();
+    window.setTimeout(() => { if (overlay.isConnected) { URL.revokeObjectURL(pdfUrl); overlay.remove(); } }, mobileDownload ? 120000 : 20000);
   } catch (error) {
     console.error('No se pudo descargar el CV en PDF', error);
     pending.textContent = 'No se pudo crear el PDF. Recargá e intentá otra vez.';
