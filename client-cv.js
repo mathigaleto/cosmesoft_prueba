@@ -65,8 +65,8 @@ export async function openClientCvPdf(cv, clients = []) {
     .cv-pdf-title{font-size:28px;line-height:1.2;margin:0 0 8px;color:#171b22}
     .cv-pdf-intro{margin:0 0 22px;color:#59616b}
     .cv-pdf-grid{display:block}
-    .cv-pdf-card{break-inside:avoid;page-break-inside:avoid;display:grid;grid-template-columns:136px minmax(0,1fr);gap:18px;align-items:center;margin:0 0 14px;padding:16px;border:1px solid #d8dde4;border-radius:14px;background:#fff;box-shadow:0 2px 7px rgba(25,35,50,.07)}
-    .cv-pdf-logo{width:124px;height:100px;display:flex;align-items:center;justify-content:center;padding:8px;border:1px solid #e0e5eb;border-radius:11px;background:#f9fafb}
+    .cv-pdf-card{break-inside:avoid;page-break-inside:avoid;display:grid;grid-template-columns:136px minmax(0,1fr);gap:18px;align-items:center;margin:0 0 14px;padding:16px;border:1.25px solid #b9c4d1;border-radius:14px;background:#fff;box-shadow:0 2px 7px rgba(25,35,50,.07)}
+    .cv-pdf-logo{width:124px;height:100px;display:flex;align-items:center;justify-content:center;padding:8px;border:1.25px solid #c4ceda;border-radius:11px;background:#f9fafb}
     .cv-pdf-logo img{display:block;width:auto!important;height:auto!important;max-width:106px!important;max-height:82px!important;object-fit:contain}
     .cv-pdf-card h2{font-size:18px;line-height:1.3;margin:0 0 6px;color:#171b22}
     .cv-pdf-pill{display:inline-block;margin-bottom:6px;padding:3px 9px;border-radius:20px;background:#eef3f4;color:#24343a;font-size:11px;font-weight:bold}
@@ -108,7 +108,7 @@ export async function openClientCvPdf(cv, clients = []) {
       image: {type: 'png'},
       html2canvas: {scale: 3, useCORS: true, allowTaint: false, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0},
       jsPDF: {unit: 'mm', format: 'a4', orientation: 'portrait', compress: true},
-      pagebreak: {mode: ['css', 'legacy'], avoid: '.cv-pdf-card'}
+      pagebreak: {mode: ['avoid-all', 'css'], avoid: '.cv-pdf-card'}
     }).from(host).outputPdf('blob');
     const pdfUrl = URL.createObjectURL(pdfBlob);
     overlay.replaceChildren();
