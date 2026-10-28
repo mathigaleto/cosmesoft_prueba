@@ -88,7 +88,7 @@ export async function openClientCvPdf(cv, clients = []) {
   try {
     const jsPDF = await loadPdfLibrary();
     const pdf = new jsPDF({unit: 'mm', format: 'a4', orientation: 'portrait', compress: true});
-    const pageWidth = 210, pageHeight = 297, margin = 12, contentWidth = pageWidth - margin * 2;
+    const pageWidth = 210, pageHeight = 297, margin = 9, contentWidth = pageWidth - margin * 2;
     pdf.setProperties({title: data.title || 'Experiencias en implementación de PingERP'});
     const drawWrapped = (text, x, y, width, size, style = 'normal', lineHeight = 5.2) => {
       pdf.setFont('helvetica', style); pdf.setFontSize(size);
@@ -96,36 +96,40 @@ export async function openClientCvPdf(cv, clients = []) {
       pdf.text(lines, x, y);
       return y + lines.length * lineHeight;
     };
-    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(20);
+    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(18);
     const titleLines = pdf.splitTextToSize(data.title || 'Experiencias en implementación de PingERP', contentWidth);
-    let y = 17; pdf.text(titleLines, margin, y); y += titleLines.length * 8;
-    if (data.intro) { y = drawWrapped(data.intro, margin, y + 1, contentWidth, 10, 'normal', 5.2) + 7; } else y += 5;
+    let y = 15; pdf.text(titleLines, margin, y); y += titleLines.length * 7;
+    if (data.intro) {
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10);
+      const introWidth = contentWidth - 28;
+      const introLines = pdf.splitTextToSize(String(data.intro), introWidth);
+      pdf.setTextColor(77, 84, 92);
+      pdf.text(introLines, pageWidth / 2, y + 2, {align: 'center', lineHeightFactor: 1.25});
+      y += introLines.length * 5 + 7;
+    } else y += 3;
 
     const prepared = await Promise.all(items.map(async item => ({item, logo: await loadLogoPng(findClientLogo(item, clients))})));
     for (const {item, logo} of prepared) {
       const textX = margin + 44, textWidth = contentWidth - 52;
       const info = [];
-      if (item.solution) info.push(item.solution);
       if (item.sector) info.push(`Rubro: ${item.sector}`);
       if (item.location) info.push(`Ubicación: ${item.location}`);
       const description = cvDescriptionText(item.description || '');
       if (description) info.push(description);
       const textLines = [];
       for (const paragraph of info) {
+        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9);
         const wrapped = pdf.splitTextToSize(paragraph, textWidth);
         textLines.push(...wrapped);
       }
-      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(15);
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(14);
       const nameLines = pdf.splitTextToSize(item.company, textWidth);
-      const cardHeight = Math.max(39, 12 + nameLines.length * 6.2 + 8 + textLines.length * 5.2 + 5);
-      if (y + cardHeight > pageHeight - margin) {
-        pdf.addPage('a4', 'portrait'); y = 17;
-        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(105, 105, 105);
-        pdf.text(`${data.title || 'Experiencias en implementación de PingERP'} · continuación`, margin, y); y += 9;
-      }
+      const badgeGap = 2.5, badgeHeight = 5.5;
+      const cardHeight = Math.max(35, 8 + nameLines.length * 5.4 + badgeGap + badgeHeight + textLines.length * 4.6 + 5);
+      if (y + cardHeight > pageHeight - margin) { pdf.addPage('a4', 'portrait'); y = margin; }
       pdf.setDrawColor(25, 25, 25); pdf.setLineWidth(0.45); pdf.roundedRect(margin, y, contentWidth, cardHeight, 3.5, 3.5, 'S');
-      const logoX = margin + 6, logoY = y + 6, logoW = 33, logoH = Math.min(27, cardHeight - 12);
-      pdf.setFillColor(249, 250, 251); pdf.setDrawColor(196, 206, 218); pdf.roundedRect(logoX, logoY, logoW, logoH, 2.5, 2.5, 'FD');
+      const logoX = margin + 5, logoY = y + 5, logoW = 31, logoH = Math.min(24, cardHeight - 10);
+      pdf.setFillColor(249, 250, 251); pdf.setDrawColor(25, 25, 25); pdf.roundedRect(logoX, logoY, logoW, logoH, 2.5, 2.5, 'FD');
       if (logo) {
         const ratio = Math.min((logoW - 4) / logo.width, (logoH - 4) / logo.height);
         const width = logo.width * ratio, height = logo.height * ratio;
@@ -134,14 +138,17 @@ export async function openClientCvPdf(cv, clients = []) {
         pdf.setTextColor(65, 65, 65); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(16);
         pdf.text(item.company.trim().slice(0, 2).toUpperCase(), logoX + logoW / 2, logoY + logoH / 2 + 2, {align: 'center'});
       }
-      pdf.setTextColor(23, 27, 34); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(15);
-      pdf.text(nameLines, textX, y + 9);
-      let textY = y + 9 + nameLines.length * 6.2 + 2;
+      pdf.setTextColor(23, 27, 34); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(14);
+      pdf.text(nameLines, textX, y + 7.5);
+      const badgeY = y + 7.5 + nameLines.length * 5.4 + badgeGap;
+      pdf.setFillColor(235, 241, 241); pdf.setDrawColor(235, 241, 241); pdf.roundedRect(textX, badgeY - 3.7, 16, badgeHeight, 2.6, 2.6, 'FD');
+      pdf.setTextColor(31, 47, 51); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.text('OTV', textX + 8, badgeY, {align: 'center'});
+      let textY = badgeY + 5.7;
       if (textLines.length) {
-        pdf.setTextColor(66, 75, 85); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9.5);
-        pdf.text(textLines, textX, textY);
+        pdf.setTextColor(66, 75, 85); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9);
+        pdf.text(textLines, textX, textY, {lineHeightFactor: 1.2});
       }
-      pdf.setTextColor(23, 27, 34); y += cardHeight + 7;
+      pdf.setTextColor(23, 27, 34); y += cardHeight + 4;
     }
 
     const pdfBlob = pdf.output('blob');
