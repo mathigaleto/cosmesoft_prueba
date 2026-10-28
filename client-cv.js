@@ -87,8 +87,8 @@ export async function openClientCvPdf(cv, clients = []) {
   let pdfUrl = '';
   try {
     const jsPDF = await loadPdfLibrary();
-    const pdf = new jsPDF({unit: 'mm', format: 'a4', orientation: 'portrait', compress: true});
-    const pageWidth = 210, pageHeight = 297, margin = 9, contentWidth = pageWidth - margin * 2;
+    const pdf = new jsPDF({unit: 'mm', format: 'a4', orientation: 'landscape', compress: true});
+    const pageWidth = 297, pageHeight = 210, margin = 8, contentWidth = pageWidth - margin * 2;
     pdf.setProperties({title: data.title || 'Experiencias en implementación de PingERP'});
     pdf.setFont('helvetica', 'bold'); pdf.setFontSize(21);
     const titleLines = pdf.splitTextToSize(data.title || 'Experiencias en implementación de PingERP', contentWidth);
@@ -98,18 +98,18 @@ export async function openClientCvPdf(cv, clients = []) {
       const introWidth = contentWidth - 14;
       const introLines = pdf.splitTextToSize(String(data.intro), introWidth);
       pdf.setTextColor(77, 84, 92);
-      pdf.text(introLines, margin + 7, y + 2, {lineHeightFactor: 1.2});
+      pdf.text(introLines, pageWidth / 2, y + 2, {align: 'center', lineHeightFactor: 1.2});
       y += introLines.length * 4.8 + 7;
     } else y += 3;
 
     const prepared = await Promise.all(items.map(async item => ({item, logo: await loadLogoPng(findClientLogo(item, clients))})));
-    const cardWidth = (contentWidth - 6) / 2;
+    const cardWidth = (contentWidth - 8) / 2;
     const cards = prepared.map(({item, logo}, index) => {
-      const x = margin + (index % 2) * (cardWidth + 6), textX = x + 29, textWidth = cardWidth - 34;
-      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11.5);
+      const x = margin + (index % 2) * (cardWidth + 8), textX = x + 32, textWidth = cardWidth - 37;
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12);
       const nameLines = pdf.splitTextToSize(item.company, textWidth);
       const solution = String(item.solution || '').trim() || 'PingERP';
-      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8.5);
       const solutionLines = pdf.splitTextToSize(solution, textWidth - 4);
       const info = [];
       if (item.sector) info.push(`Rubro: ${item.sector}`);
@@ -121,7 +121,7 @@ export async function openClientCvPdf(cv, clients = []) {
         pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8);
         infoLines.push(...pdf.splitTextToSize(paragraph, textWidth));
       }
-      const cardHeight = Math.max(37, 6 + nameLines.length * 4.5 + 2 + Math.max(5, solutionLines.length * 3.7) + 3 + infoLines.length * 3.8 + 5);
+      const cardHeight = Math.max(38, 6 + nameLines.length * 4.5 + 2 + Math.max(5, solutionLines.length * 3.7) + 3 + infoLines.length * 3.8 + 5);
       return {item, logo, x, textX, textWidth, nameLines, solution, solutionLines, infoLines, cardHeight};
     });
     for (let row = 0; row < cards.length; row += 2) {
@@ -130,7 +130,7 @@ export async function openClientCvPdf(cv, clients = []) {
       for (const card of rowCards) {
         const {item, logo, x, textX, textWidth, nameLines, solution, solutionLines, infoLines} = card;
         pdf.setDrawColor(25, 25, 25); pdf.setLineWidth(0.4); pdf.roundedRect(x, y, cardWidth, rowHeight, 2.8, 2.8, 'S');
-        const logoW = 20, logoH = 18, logoX = x + 4, logoY = y + (rowHeight - logoH) / 2;
+        const logoW = 23, logoH = 21, logoX = x + 4, logoY = y + (rowHeight - logoH) / 2;
         pdf.setFillColor(249, 250, 251); pdf.setDrawColor(25, 25, 25); pdf.roundedRect(logoX, logoY, logoW, logoH, 2, 2, 'FD');
         if (logo) {
           const ratio = Math.min((logoW - 3) / logo.width, (logoH - 3) / logo.height);
@@ -140,7 +140,7 @@ export async function openClientCvPdf(cv, clients = []) {
           pdf.setTextColor(65, 65, 65); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12);
           pdf.text(item.company.trim().slice(0, 2).toUpperCase(), logoX + logoW / 2, logoY + logoH / 2 + 1.5, {align: 'center'});
         }
-        pdf.setTextColor(23, 27, 34); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11.5);
+        pdf.setTextColor(23, 27, 34); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12);
         pdf.text(nameLines, textX, y + 5.2, {lineHeightFactor: 1.05});
         let textY = y + 5.2 + nameLines.length * 4.5 + 1.5;
         pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); const solutionWidth = Math.min(textWidth, Math.max(17, ...solutionLines.map(line => pdf.getTextWidth(line) + 5)));

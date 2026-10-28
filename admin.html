@@ -71,11 +71,13 @@
   </main>
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-      import { findClientLogo, openClientCvPdf, sanitizeRichHtml } from './client-cv.js?v=cv-grid-6-pdf-20261028';
+      import { findClientLogo, openClientCvPdf, sanitizeRichHtml } from './client-cv.js?v=cv-landscape-six-20261028-v2';
     const URL='https://jeonzbisrwukbpvydcyh.supabase.co';
     const KEY='sb_publishable_c4VeVqtYXYGMtzTBoBfiKg_gCf_vut-';
     const ADMIN='mathigaleto@gmail.com';
-    const supabase=createClient(URL,KEY);
+    const authStorageKey='sb-jeonzbisrwukbpvydcyh-auth-token';
+    try{localStorage.removeItem(authStorageKey)}catch{}
+    const supabase=createClient(URL,KEY,{auth:{storage:window.sessionStorage,persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
     const $=id=>document.getElementById(id);
     const login=$('login'),editor=$('editor'),loginStatus=$('loginStatus'),saveStatus=$('saveStatus'),uploadStatus=$('uploadStatus'),passwordStatus=$('passwordStatus'),projectUploadStatus=$('projectUploadStatus');
     const EXTRA_FIELDS=[
