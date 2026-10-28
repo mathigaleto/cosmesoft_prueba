@@ -90,65 +90,70 @@ export async function openClientCvPdf(cv, clients = []) {
     const pdf = new jsPDF({unit: 'mm', format: 'a4', orientation: 'portrait', compress: true});
     const pageWidth = 210, pageHeight = 297, margin = 9, contentWidth = pageWidth - margin * 2;
     pdf.setProperties({title: data.title || 'Experiencias en implementación de PingERP'});
-    const drawWrapped = (text, x, y, width, size, style = 'normal', lineHeight = 5.2) => {
-      pdf.setFont('helvetica', style); pdf.setFontSize(size);
-      const lines = pdf.splitTextToSize(String(text || ''), width);
-      pdf.text(lines, x, y);
-      return y + lines.length * lineHeight;
-    };
-    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(18);
+    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(21);
     const titleLines = pdf.splitTextToSize(data.title || 'Experiencias en implementación de PingERP', contentWidth);
-    let y = 15; pdf.text(titleLines, margin, y); y += titleLines.length * 7;
+    let y = 16; pdf.text(titleLines, pageWidth / 2, y, {align: 'center'}); y += titleLines.length * 8;
     if (data.intro) {
       pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10);
-      const introWidth = contentWidth - 28;
+      const introWidth = contentWidth - 14;
       const introLines = pdf.splitTextToSize(String(data.intro), introWidth);
       pdf.setTextColor(77, 84, 92);
-      pdf.text(introLines, pageWidth / 2, y + 2, {align: 'center', lineHeightFactor: 1.25});
-      y += introLines.length * 5 + 7;
+      pdf.text(introLines, margin + 7, y + 2, {lineHeightFactor: 1.2});
+      y += introLines.length * 4.8 + 7;
     } else y += 3;
 
     const prepared = await Promise.all(items.map(async item => ({item, logo: await loadLogoPng(findClientLogo(item, clients))})));
-    for (const {item, logo} of prepared) {
-      const textX = margin + 44, textWidth = contentWidth - 52;
+    const cardWidth = (contentWidth - 6) / 2;
+    const cards = prepared.map(({item, logo}, index) => {
+      const x = margin + (index % 2) * (cardWidth + 6), textX = x + 29, textWidth = cardWidth - 34;
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11.5);
+      const nameLines = pdf.splitTextToSize(item.company, textWidth);
+      const solution = String(item.solution || '').trim() || 'PingERP';
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8);
+      const solutionLines = pdf.splitTextToSize(solution, textWidth - 4);
       const info = [];
       if (item.sector) info.push(`Rubro: ${item.sector}`);
       if (item.location) info.push(`Ubicación: ${item.location}`);
       const description = cvDescriptionText(item.description || '');
       if (description) info.push(description);
-      const textLines = [];
+      const infoLines = [];
       for (const paragraph of info) {
-        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9);
-        const wrapped = pdf.splitTextToSize(paragraph, textWidth);
-        textLines.push(...wrapped);
+        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8);
+        infoLines.push(...pdf.splitTextToSize(paragraph, textWidth));
       }
-      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(14);
-      const nameLines = pdf.splitTextToSize(item.company, textWidth);
-      const badgeGap = 2.5, badgeHeight = 5.5;
-      const cardHeight = Math.max(35, 8 + nameLines.length * 5.4 + badgeGap + badgeHeight + textLines.length * 4.6 + 5);
-      if (y + cardHeight > pageHeight - margin) { pdf.addPage('a4', 'portrait'); y = margin; }
-      pdf.setDrawColor(25, 25, 25); pdf.setLineWidth(0.45); pdf.roundedRect(margin, y, contentWidth, cardHeight, 3.5, 3.5, 'S');
-      const logoX = margin + 5, logoY = y + 5, logoW = 31, logoH = Math.min(24, cardHeight - 10);
-      pdf.setFillColor(249, 250, 251); pdf.setDrawColor(25, 25, 25); pdf.roundedRect(logoX, logoY, logoW, logoH, 2.5, 2.5, 'FD');
-      if (logo) {
-        const ratio = Math.min((logoW - 4) / logo.width, (logoH - 4) / logo.height);
-        const width = logo.width * ratio, height = logo.height * ratio;
-        pdf.addImage(logo.data, 'PNG', logoX + (logoW - width) / 2, logoY + (logoH - height) / 2, width, height);
-      } else {
-        pdf.setTextColor(65, 65, 65); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(16);
-        pdf.text(item.company.trim().slice(0, 2).toUpperCase(), logoX + logoW / 2, logoY + logoH / 2 + 2, {align: 'center'});
+      const cardHeight = Math.max(37, 6 + nameLines.length * 4.5 + 2 + Math.max(5, solutionLines.length * 3.7) + 3 + infoLines.length * 3.8 + 5);
+      return {item, logo, x, textX, textWidth, nameLines, solution, solutionLines, infoLines, cardHeight};
+    });
+    for (let row = 0; row < cards.length; row += 2) {
+      const rowCards = cards.slice(row, row + 2), rowHeight = Math.max(...rowCards.map(card => card.cardHeight));
+      if (y + rowHeight > pageHeight - margin) { pdf.addPage('a4', 'portrait'); y = margin; }
+      for (const card of rowCards) {
+        const {item, logo, x, textX, textWidth, nameLines, solution, solutionLines, infoLines} = card;
+        pdf.setDrawColor(25, 25, 25); pdf.setLineWidth(0.4); pdf.roundedRect(x, y, cardWidth, rowHeight, 2.8, 2.8, 'S');
+        const logoW = 20, logoH = 18, logoX = x + 4, logoY = y + (rowHeight - logoH) / 2;
+        pdf.setFillColor(249, 250, 251); pdf.setDrawColor(25, 25, 25); pdf.roundedRect(logoX, logoY, logoW, logoH, 2, 2, 'FD');
+        if (logo) {
+          const ratio = Math.min((logoW - 3) / logo.width, (logoH - 3) / logo.height);
+          const width = logo.width * ratio, height = logo.height * ratio;
+          pdf.addImage(logo.data, 'PNG', logoX + (logoW - width) / 2, logoY + (logoH - height) / 2, width, height);
+        } else {
+          pdf.setTextColor(65, 65, 65); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12);
+          pdf.text(item.company.trim().slice(0, 2).toUpperCase(), logoX + logoW / 2, logoY + logoH / 2 + 1.5, {align: 'center'});
+        }
+        pdf.setTextColor(23, 27, 34); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11.5);
+        pdf.text(nameLines, textX, y + 5.2, {lineHeightFactor: 1.05});
+        let textY = y + 5.2 + nameLines.length * 4.5 + 1.5;
+        pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); const solutionWidth = Math.min(textWidth, Math.max(17, ...solutionLines.map(line => pdf.getTextWidth(line) + 5)));
+        const solutionHeight = Math.max(5, solutionLines.length * 3.7 + 1);
+        pdf.setFillColor(235, 241, 241); pdf.setDrawColor(221, 229, 230); pdf.roundedRect(textX, textY - 3.5, solutionWidth, solutionHeight, 1.8, 1.8, 'FD');
+        pdf.setTextColor(31, 47, 51); pdf.text(solutionLines, textX + 2.5, textY, {lineHeightFactor: 1.05});
+        textY += solutionHeight + 2;
+        if (infoLines.length) {
+          pdf.setTextColor(66, 75, 85); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8);
+          pdf.text(infoLines, textX, textY, {lineHeightFactor: 1.05});
+        }
       }
-      pdf.setTextColor(23, 27, 34); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(14);
-      pdf.text(nameLines, textX, y + 7.5);
-      const badgeY = y + 7.5 + nameLines.length * 5.4 + badgeGap;
-      pdf.setFillColor(235, 241, 241); pdf.setDrawColor(235, 241, 241); pdf.roundedRect(textX, badgeY - 3.7, 16, badgeHeight, 2.6, 2.6, 'FD');
-      pdf.setTextColor(31, 47, 51); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8); pdf.text('OTV', textX + 8, badgeY, {align: 'center'});
-      let textY = badgeY + 5.7;
-      if (textLines.length) {
-        pdf.setTextColor(66, 75, 85); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9);
-        pdf.text(textLines, textX, textY, {lineHeightFactor: 1.2});
-      }
-      pdf.setTextColor(23, 27, 34); y += cardHeight + 4;
+      y += rowHeight + 4;
     }
 
     const pdfBlob = pdf.output('blob');
